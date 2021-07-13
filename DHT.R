@@ -343,16 +343,13 @@ DimPlot(pancreas.integrated, reduction = "umap", label = TRUE, group.by = "seura
 #Visualize gene expression
 DefaultAssay(object = pancreas.integrated) <- "RNA"
 FeaturePlot(object = pancreas.integrated,
-            features = c("INS", "GCG"),
+            features = c("GCG"),
             pt.size = 1,
             cols = c("darkgrey", "red"),
             min.cutoff = 0,
             #max.cutoff = 10,
             slot = 'data',
             order = TRUE)
-
-# Save file this will change but for showing them on 07132021 its fine
-# saveRDS(pancreas.integrated, file = "D:/R-Projects/DHT/pancreas.integrated.rds")
 
 #New metadata column
 pancreas.integrated$new_clusters <- pancreas.integrated$integrated_snn_res.0.5
@@ -379,3 +376,124 @@ pancreas.integrated <- RenameIdents(pancreas.integrated,
                                     "15" = "stellate"
                                     )
 DimPlot(pancreas.integrated, reduction = "umap", label = TRUE)
+
+# Some clusters including tuft, lymphocyte populations are missing
+plot <- DimPlot(pancreas.integrated, reduction = "umap")
+pancreas.integrated <- CellSelector(plot = plot, object = pancreas.integrated, ident = "schwann")
+pancreas.integrated <- CellSelector(plot = plot, object = pancreas.integrated, ident = "lymphocytes")
+
+# Saving this information in the metadata slot
+table(Idents(pancreas.integrated))
+pancreas.integrated$celltype <- Idents(pancreas.integrated)
+head(pancreas.integrated@meta.data)
+
+# Define an order of cluster identities remember after this step-
+# cluster re-assignment occurs, which re-assigns clustering in my_levels
+my_levels <- c("beta", "alpha", "delta", "gamma", 
+               "ductal", "acinar", "stellate", 
+               "schwann", "endothelium", "macrophage", "lymphocytes")
+head(pancreas.integrated@meta.data$celltype)
+
+# Re-level object@meta.data this just orders the actual metadata slot, so when you pull its already ordered
+pancreas.integrated@meta.data$celltype <- factor(x = pancreas.integrated@meta.data$celltype, levels = my_levels)
+Idents(pancreas.integrated) <- "celltype"
+DimPlot(pancreas.integrated, split.by = "treatment", group.by = "celltype")
+DimPlot(pancreas.integrated, group.by = "treatment")
+
+# Save file this will change but for showing them on 07132021 its fine
+# saveRDS(pancreas.integrated, file = "D:/R-Projects/DHT/pancreas.integrated.rds")
+pancreas.integrated <- readRDS("D:/R-Projects/DHT/pancreas.integrated.rds")
+
+# Identify conserved cell markers
+DefaultAssay(pancreas.integrated) <- "RNA"
+markers.beta <- FindConservedMarkers(pancreas.integrated, ident.1 = "beta", grouping.var = "treatment", verbose = TRUE)
+head(markers.beta)
+
+markers.alpha <- FindConservedMarkers(pancreas.integrated, ident.1 = "alpha", grouping.var = "treatment", verbose = TRUE)
+head(markers.alpha)
+
+markers.delta <- FindConservedMarkers(pancreas.integrated, ident.1 = "delta", grouping.var = "treatment", verbose = TRUE)
+head(markers.delta)
+
+markers.gamma <- FindConservedMarkers(pancreas.integrated, ident.1 = "gamma", grouping.var = "treatment", verbose = TRUE)
+head(markers.gamma)
+
+markers.ductal <- FindConservedMarkers(pancreas.integrated, ident.1 = "ductal", grouping.var = "treatment", verbose = TRUE)
+head(markers.ductal)
+
+markers.acinar <- FindConservedMarkers(pancreas.integrated, ident.1 = "acinar", grouping.var = "treatment", verbose = TRUE)
+head(markers.acinar)
+
+markers.stellate <- FindConservedMarkers(pancreas.integrated, ident.1 = "stellate", grouping.var = "treatment", verbose = TRUE)
+head(markers.stellate)
+
+markers.schwann <- FindConservedMarkers(pancreas.integrated, ident.1 = "schwann", grouping.var = "treatment", verbose = TRUE)
+head(markers.schwann)
+
+markers.endothelium <- FindConservedMarkers(pancreas.integrated, ident.1 = "endothelium", grouping.var = "treatment", verbose = TRUE)
+head(markers.endothelium)
+
+markers.macrophage <- FindConservedMarkers(pancreas.integrated, ident.1 = "macrophage", grouping.var = "treatment", verbose = TRUE)
+head(markers.macrophage)
+
+markers.lymphocytes <- FindConservedMarkers(pancreas.integrated, ident.1 = "lymphocytes", grouping.var = "treatment", verbose = TRUE)
+head(markers.lymphocytes)
+
+# Identify conserved cell markers
+Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("beta", "alpha", "delta", "gamma", 
+                                                                      "ductal", "acinar", "stellate", 
+                                                                      "schwann", "endothelium", "macrophage", "lymphocytes"))
+markers.to.plot <- c("INS", "MAFA", "IAPP", "GCG", "DPP4", "GC", "LEPR", "SST", "FRZB", "PPY", "CALB1", "THSD7A",
+                     "CFTR", "TFPI2", "MMP7", "CELA2A", "CELA2B", "CELA3A", "COL3A1", "FMOD", "PDGFRB", 
+                     "SOX10", "CDH19", "NGFR", "CD34", "ENG", "VWF", "CD86", "CSF1R", "FCER1G", "NKG7", "IL2RB", "CCL5")
+DotPlot(pancreas.integrated, features = rev(markers.to.plot), cols = c("blue", "red"), dot.scale = 8, 
+        split.by = "treatment") + RotatedAxis()
+
+# Diff gene testing across conditions
+pancreas.integrated$treatment.dht <- paste(Idents(pancreas.integrated), pancreas.integrated$treatment, sep = "_")
+pancreas.integrated$celltype.split <- Idents(pancreas.integrated)
+Idents(pancreas.integrated) <- "treatment.dht"
+beta.DHT.response <- FindMarkers(pancreas.integrated, ident.1 = "beta_EtOH", ident.2 = "beta_DHT[10nM]", verbose = FALSE)
+head(beta.DHT.response, n = 15)
+
+
+plots <- VlnPlot(beta.cells, features = c("MT-CO3", "MAF", "AR"), group.by = "treatment", 
+                 pt.size = 0, combine = TRUE)
+wrap_plots(plots = plots, nrow = 1)
+
+
+
+VlnPlot(pancreas.integrated, features = c("MT-CO3", "MT-ND1", "MT-ATP6", "CA2", "PDK4"), group.by = "treatment")
+
+write.csv(beta.DHT.response, file = "D:/R-Projects/DHT/Data output/beta.DHT.response.csv")
+
+
+
+
+
+
+
+
+theme_set(theme_cowplot())
+beta.cells <- subset(pancreas.integrated, idents = "beta")
+Idents(beta.cells) <- "treatment"
+avg.beta.cells <- log1p(AverageExpression(beta.cells, verbose = FALSE)$RNA)
+avg.beta.cells$gene <- rownames(avg.beta.cells)
+
+alpha.cells <- subset(pancreas.integrated, idents = "alpha")
+Idents(alpha.cells) <- "treatment"
+avg.alpha.cells <- log1p(AverageExpression(alpha.cells, verbose = FALSE)$RNA)
+avg.alpha.cells$gene <- rownames(avg.alpha.cells)
+
+genes.to.label = c("ISG15", "LY6E", "IFI6", "ISG20", "MX1", "IFIT2", "IFIT1", "CXCL10", "CCL8")
+p1 <- ggplot(avg.beta.cells, aes("ctrl", "DHT[10nM]")) + geom_point() + ggtitle("Beta Cells")
+p1 <- LabelPoints(plot = p1, points = genes.to.label, repel = TRUE)
+p2 <- ggplot(avg.cd14.mono, aes(CTRL, STIM)) + geom_point() + ggtitle("CD14 Monocytes")
+p2 <- LabelPoints(plot = p2, points = genes.to.label, repel = TRUE)
+plot_grid(p1, p2)
+
+
+
+
+
+
