@@ -397,8 +397,9 @@ head(pancreas.integrated@meta.data$celltype)
 # Re-level object@meta.data this just orders the actual metadata slot, so when you pull its already ordered
 pancreas.integrated@meta.data$celltype <- factor(x = pancreas.integrated@meta.data$celltype, levels = my_levels)
 Idents(pancreas.integrated) <- "celltype"
-DimPlot(pancreas.integrated, split.by = "treatment", group.by = "celltype")
+DimPlot(pancreas.integrated, split.by = "treatment", group.by = "celltype", label = TRUE)
 DimPlot(pancreas.integrated, group.by = "treatment")
+DimPlot(pancreas.integrated, split.by = "treatment", group.by = "DF.classifications_0.25_0.09_346",)
 
 # Save file this will change but for showing them on 07132021 its fine
 # saveRDS(pancreas.integrated, file = "D:/R-Projects/DHT/pancreas.integrated.rds")
@@ -446,8 +447,56 @@ Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("b
 markers.to.plot <- c("INS", "MAFA", "IAPP", "GCG", "DPP4", "GC", "LEPR", "SST", "FRZB", "PPY", "CALB1", "THSD7A",
                      "CFTR", "TFPI2", "MMP7", "CELA2A", "CELA2B", "CELA3A", "COL3A1", "FMOD", "PDGFRB", 
                      "SOX10", "CDH19", "NGFR", "CD34", "ENG", "VWF", "CD86", "CSF1R", "FCER1G", "NKG7", "IL2RB", "CCL5")
-DotPlot(pancreas.integrated, features = rev(markers.to.plot), cols = c("blue", "red"), dot.scale = 8, 
-        split.by = "treatment") + RotatedAxis()
+
+# Advanced coding for ggplot2
+# Create a new metadata slot containing combined info, segregating clusters and samples
+Idents(object = pancreas.integrated) <- "celltype"
+pancreas.integrated$celltype.sample <- paste(Idents(pancreas.integrated),pancreas.integrated$treatment, sep = "_")
+table(pancreas.integrated@meta.data$celltype.sample)
+
+# New metadata column is not paired, so we need to pair
+my_levels2 <- c("beta_EtOH", "beta_DHT[10nM]", "alpha_EtOH", "alpha_DHT[10nM]", "delta_EtOH", "delta_DHT[10nM]", 
+                "gamma_EtOH", "gamma_DHT[10nM]", "ductal_EtOH", "ductal_DHT[10nM]", "acinar_EtOH", "acinar_DHT[10nM]", 
+                "stellate_EtOH", "stellate_DHT[10nM]", "schwann_EtOH", "schwann_DHT[10nM]", "endothelium_EtOH", "endothelium_DHT[10nM]", 
+                "macrophage_EtOH", "macrophage_DHT[10nM]", "lymphocytes_EtOH", "lymphocytes_DHT[10nM]")
+head(pancreas.integrated@meta.data$celltype)
+
+# Re-level object@meta.data this just orders the actual metadata slot, so when you pull its already ordered
+pancreas.integrated@meta.data$celltype.sample <- factor(x = pancreas.integrated@meta.data$celltype.sample, levels = my_levels2)
+table(pancreas.integrated@meta.data$celltype.sample)
+
+# Re select organized idents
+Idents(pancreas.integrated) <- "celltype.sample"
+DotPlot(pancreas.integrated,  
+        dot.scale = 8, 
+        features = rev(markers.to.plot)) + 
+  geom_point(aes(size=pct.exp), shape = 21, stroke=0.5) +
+  theme_light() +
+  #facet_wrap(~??? what metadata should be here??)
+  #coord_flip() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust=1, size =12, face = "bold", colour = "black")) +
+  theme(axis.text.y = element_text(angle = 0, vjust = 0.3, hjust=1, size =12, face = "bold", colour = "black")) +
+  theme(plot.title = element_text(size = 10, face = "bold"),
+        legend.title=element_text(size=12, face = "bold"), 
+        legend.text=element_text(size=12, face = "bold")) +
+  scale_colour_gradient(low =c("white"), high =c("red")) +
+  guides(color = guide_colorbar(title = 'Average Expression'))
+
+# Older dotplot configuration, shows only percentage not expression
+Idents(pancreas.integrated) <- "celltype"
+DotPlot(pancreas.integrated, features = rev(markers.to.plot), 
+        cols = c("blue", "red"), 
+        dot.scale = 8, 
+        split.by = "treatment") + 
+  RotatedAxis() +
+  geom_point(aes(size=pct.exp), shape = 21, colour="black", stroke=0.5) +
+  theme_light() + 
+  #coord_flip() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust=1, size =10, face = "bold", colour = "black")) +
+  theme(axis.text.y = element_text(angle = 0, vjust = 0.3, hjust=1, size =8, face = "bold", colour = "black")) +
+  theme(plot.title = element_text(size = 10, face = "bold"),
+        legend.title=element_text(size=10), 
+        legend.text=element_text(size=10))
 
 # Diff gene testing across conditions
 pancreas.integrated$treatment.dht <- paste(Idents(pancreas.integrated), pancreas.integrated$treatment, sep = "_")
@@ -464,10 +513,15 @@ wrap_plots(plots = plots, nrow = 1)
 
 
 VlnPlot(pancreas.integrated, features = c("MT-CO3", "MT-ND1", "MT-ATP6", "CA2", "PDK4"), group.by = "treatment")
-
 write.csv(beta.DHT.response, file = "D:/R-Projects/DHT/Data output/beta.DHT.response.csv")
 
 
+X1 <- NULL
+table(x = FetchData(pancreas.integrated, vars = c('celltype', 'sex')))
+x1 <- subset(pancreas.integrated, subset = (celltype == c("beta", "alpha")) & (sex == "Male"))
+table(x = FetchData(x1, vars = c('celltype', 'sex')))
+x2 <- subset(pancreas.integrated, subset = (celltype != c("beta")) & (sex != "Male")) # wont run because you cant subset a vector with no cells which is what is left once all male cells are removed :)
+table(x = FetchData(x2, vars = c('celltype', 'sex')))
 
 
 
@@ -494,6 +548,33 @@ plot_grid(p1, p2)
 
 
 
+# Extra
+# Installation of the latest released version
+install.packages('GOplot')
+library(GOplot)
+packageVersion("GOplot")
 
+gene.data <- read.csv("D:/R-Projects/DHT/Data output/beta.DHT.de.data.csv")
+up.go <- read.csv("D:/R-Projects/DHT/Data output/up/DHTGOup.csv")
+down.go <- read.csv("D:/R-Projects/DHT/Data output/Down/DHTGOdown.csv")
+
+head(gene.data)
+head(up.go)
+circ <- circle_dat(up.go, gene.data)
+circ
+process <- List('cellular response to decreased oxygen levels', "cellular response to hypoxia",
+                'response to unfolded protein', 'canonical glycolysis',
+                'glucose catabolic process to pyruvate', 'glycolytic process through glucose-6-phosphate',
+                'gluconeogenesis', 'cellular response to oxidative stress',
+                'protein stabilization ', 'amino acid transport ')
+
+process
+chord <- chord_dat(data = circ, genes = gene.data)
+chord <- chord_dat(data = circ, process = process)
+chord <- chord_dat(data = circ, genes = gene.data, process = process)
+GOChord(chord, space = 0.02, gene.order = 'logFC', gene.space = 0.25, gene.size = 5)
+
+
+GOBubble(circ, labels = 1)
 
 
