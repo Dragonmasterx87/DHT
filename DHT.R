@@ -1,19 +1,20 @@
 # LOAD LIBRARIES ####
 # Restart Rstudio or R
 # Run the following code once you have Seurat installed
-library(ggplot2)
-library(cowplot)
-library(Matrix)
-library(ggridges)
-library(ggrepel)
-library(dplyr)
-library(Seurat)
-library(monocle3)
-library(plotly)
-library(clustree)
-library(patchwork)
-library(future)
-library(DoubletFinder)
+suppressWarnings({
+  library(ggplot2)
+  library(cowplot)
+  library(Matrix)
+  library(ggridges)
+  library(ggrepel)
+  library(dplyr)
+  library(Seurat)
+  library(monocle3)
+  library(plotly)
+  library(clustree)
+  library(patchwork)
+  library(future)
+  library(DoubletFinder)})
 
 # CONFIRM CORRECT INSTALL ####
 # Confirm package version of Seurat and Monocle
@@ -25,46 +26,94 @@ options(future.globals.maxSize = 4000 * 1024^2)
 
 # OBJECT SETUP AND NORMALIZATION ####
 # STEP 1: Load 10X data ####
-HP2107001_ctrl.data <- Read10X(data.dir = "D:/R-Projects/DHT/F7a GEX_HP21070_01/filtered_feature_bc_matrix/")
-HP2107001_DHT.data <- Read10X(data.dir = "D:/R-Projects/DHT/F7b GEX_HP21070_01_DHT/filtered_feature_bc_matrix/")
+HP2107001_ctrl.data <- Read10X(data.dir = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Raw Data\F7a GEX_HP21070_01\filtered_feature_bc_matrix)")
+HP2107001_DHT.data <- Read10X(data.dir = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Raw Data\F7b GEX_HP21070_01_DHT\filtered_feature_bc_matrix)")
+HP2107701_ctrl.data <- Read10X(data.dir = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Raw Data\F8a_GEX_HP21077_01\filtered_feature_bc_matrix)")
+HP2107701_DHT.data <- Read10X(data.dir = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Raw Data\F8b_GEX_HP21077_01_DHT\filtered_feature_bc_matrix)")
+HP2107901_ctrl.data <- Read10X(data.dir = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Raw Data\F9a_GEX_HP21079_01\filtered_feature_bc_matrix)")
+HP2107901_DHT.data <- Read10X(data.dir = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Raw Data\F9b_GEX_HP21079_01_DHT\filtered_feature_bc_matrix)")
 
 # STEP 2: Create Seurat objects ####
 HP2107001_ctrl <- CreateSeuratObject(counts = HP2107001_ctrl.data)
 HP2107001_DHT <- CreateSeuratObject(counts = HP2107001_DHT.data)
+HP2107701_ctrl <- CreateSeuratObject(counts = HP2107701_ctrl.data)
+HP2107701_DHT <- CreateSeuratObject(counts = HP2107701_DHT.data)
+HP2107901_ctrl <- CreateSeuratObject(counts = HP2107901_ctrl.data)
+HP2107901_DHT <- CreateSeuratObject(counts = HP2107901_DHT.data)
 
 # Sample specific Metadata addition
 HP2107001_ctrl$sample <- "HP2107001_ctrl"
-HP2107001_ctrl$sex <- "Male"
-HP2107001_ctrl$treatment <- "EtOH"
 HP2107001_DHT$sample <- "HP2107001_DHT"
+HP2107701_ctrl$sample <- "HP2107701_ctrl"
+HP2107701_DHT$sample <- "HP2107701_DHT"
+HP2107901_ctrl$sample <- "HP2107901_ctrl"
+HP2107901_DHT$sample <- "HP2107901_DHT"
+
+# Sex specific Metadata addition
+HP2107001_ctrl$sex <- "Male"
 HP2107001_DHT$sex <- "Male"
+HP2107701_ctrl$sex <- "Male"
+HP2107701_DHT$sex <- "Male"
+HP2107901_ctrl$sex <- "Male"
+HP2107901_DHT$sex <- "Male"
+
+# Treatment specific Metadata addition
+HP2107001_ctrl$treatment <- "EtOH"
 HP2107001_DHT$treatment <- "DHT[10nM]"
+HP2107701_ctrl$treatment <- "EtOH"
+HP2107701_DHT$treatment <- "DHT[10nM]"
+HP2107901_ctrl$treatment <- "EtOH"
+HP2107901_DHT$treatment <- "DHT[10nM]"
 
 # STEP 3: Thresholding ####
 # The operator can add columns to object metadata. This is a great place to stash QC stats
 HP2107001_ctrl[["percent.mt"]] <- PercentageFeatureSet(object = HP2107001_ctrl, pattern = "^MT-")
 HP2107001_DHT[["percent.mt"]] <- PercentageFeatureSet(object = HP2107001_DHT, pattern = "^MT-")
+HP2107701_ctrl[["percent.mt"]] <- PercentageFeatureSet(object = HP2107701_ctrl, pattern = "^MT-")
+HP2107701_DHT[["percent.mt"]] <- PercentageFeatureSet(object = HP2107701_DHT, pattern = "^MT-")
+HP2107901_ctrl[["percent.mt"]] <- PercentageFeatureSet(object = HP2107901_ctrl, pattern = "^MT-")
+HP2107901_DHT[["percent.mt"]] <- PercentageFeatureSet(object = HP2107901_DHT, pattern = "^MT-")
 
 # Visualize QC metrics as a violin plot
 VlnPlot(object = HP2107001_ctrl, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 VlnPlot(object = HP2107001_DHT, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+VlnPlot(object = HP2107701_ctrl, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+VlnPlot(object = HP2107701_DHT, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+VlnPlot(object = HP2107901_ctrl, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+VlnPlot(object = HP2107901_DHT, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
 # RNA based cell thresholding
 HP2107001_ctrl <- subset(x = HP2107001_ctrl, subset = nFeature_RNA > 200 & nFeature_RNA < 8000 & percent.mt < 20)
 HP2107001_DHT <- subset(x = HP2107001_DHT, subset = nFeature_RNA > 200 & nFeature_RNA < 8000 & percent.mt < 20)
+HP2107701_ctrl <- subset(x = HP2107701_ctrl, subset = nFeature_RNA > 200 & nFeature_RNA < 8000 & percent.mt < 20)
+HP2107701_DHT <- subset(x = HP2107701_DHT, subset = nFeature_RNA > 200 & nFeature_RNA < 8000 & percent.mt < 20)
+HP2107901_ctrl <- subset(x = HP2107901_ctrl, subset = nFeature_RNA > 200 & nFeature_RNA < 8000 & percent.mt < 20)
+HP2107901_DHT <- subset(x = HP2107901_DHT, subset = nFeature_RNA > 200 & nFeature_RNA < 8000 & percent.mt < 20)
 
 # Visualize QC metrics post thresholding as a violin plot
 VlnPlot(object = HP2107001_ctrl, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 VlnPlot(object = HP2107001_DHT, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+VlnPlot(object = HP2107701_ctrl, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+VlnPlot(object = HP2107701_DHT, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+VlnPlot(object = HP2107901_ctrl, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+VlnPlot(object = HP2107901_DHT, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
 # Step 4: Add cell IDs ####
 # Add cell IDs
 HP2107001_ctrl <- RenameCells(HP2107001_ctrl, add.cell.id = "HP2107001_ctrl")
 HP2107001_DHT <- RenameCells(HP2107001_DHT, add.cell.id = "HP2107001_DHT")
+HP2107701_ctrl <- RenameCells(HP2107701_ctrl, add.cell.id = "HP2107701_ctrl")
+HP2107701_DHT <- RenameCells(HP2107701_DHT, add.cell.id = "HP2107701_DHT")
+HP2107901_ctrl <- RenameCells(HP2107901_ctrl, add.cell.id = "HP2107901_ctrl")
+HP2107901_DHT <- RenameCells(HP2107901_DHT, add.cell.id = "HP2107901_DHT")
 
 # Step 5: Merge Datasets
+# Based on comment to Issue #4753 https://github.com/satijalab/seurat/issues/4753
+# We use RPCA to yield conserved mapping and set Tx as control refrence samples
 # Merge panc_sex datasets
-pancreas.list <- list("HP2107001_ctrl" = HP2107001_ctrl, "HP2107001_DHT" = HP2107001_DHT)
+pancreas.list <- list("HP2107001_ctrl" = HP2107001_ctrl, "HP2107001_DHT" = HP2107001_DHT,
+                      "HP2107701_ctrl" = HP2107701_ctrl, "HP2107701_DHT" = HP2107701_DHT,
+                      "HP2107901_ctrl" = HP2107901_ctrl, "HP2107901_DHT" = HP2107901_DHT)
 
 # Step 6: Data normalization
 # Normalize the dataset using SCTransform
@@ -72,18 +121,25 @@ for (i in 1:length(pancreas.list)) {
   pancreas.list[[i]] <- SCTransform(pancreas.list[[i]], verbose = TRUE)
 }
 
+#Normalise data
+pancreas.list <- lapply(X = pancreas.list, FUN = function(x) {
+  x <- NormalizeData(x, verbose = FALSE)
+  x <- FindVariableFeatures(x, verbose = FALSE)
+})
+
 # Step 7: Feature selection
 # Select features for downstream integration
 pancreas.features <- SelectIntegrationFeatures(object.list = pancreas.list, nfeatures = 3000)
-pancreas.list <- PrepSCTIntegration(object.list = pancreas.list, anchor.features = pancreas.features,
-                                    verbose = TRUE)
+pancreas.list <- lapply(X = pancreas.list, FUN = function(x) {
+  x <- ScaleData(x, features = pancreas.features, verbose = FALSE)
+  x <- RunPCA(x, features = pancreas.features, verbose = FALSE)
+})
 
 # Step 8: Anchor identification and data integration
 # Identify anchors and integrate dataset
-pancreas.anchors <- FindIntegrationAnchors(object.list = pancreas.list, normalization.method = "SCT",
-                                           anchor.features = pancreas.features, verbose = TRUE)
-pancreas.integrated <- IntegrateData(anchorset = pancreas.anchors, normalization.method = "SCT",
-                                     verbose = TRUE)
+pancreas.anchors <- FindIntegrationAnchors(object.list = pancreas.list, reference = c(1,3,5), 
+                                           anchor.features = pancreas.features, reduction = "rpca", dims = 1:50, verbose = TRUE)
+pancreas.integrated <- IntegrateData(anchorset = pancreas.anchors, dims = 1:50, verbose = TRUE)
 
 # Step 9: Linear dimensionality assessment
 # Look at your default assay
