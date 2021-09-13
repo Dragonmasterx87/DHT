@@ -22,7 +22,7 @@ packageVersion("Seurat")
 packageVersion("monocle3")
 
 # Set global environment parameter
-options(future.globals.maxSize = 4000 * 1024^2)
+options(future.globals.maxSize = 8000 * 1024^2)
 
 # OBJECT SETUP AND NORMALIZATION ####
 # STEP 1: Load 10X data ####
@@ -34,12 +34,12 @@ HP2107901_ctrl.data <- Read10X(data.dir = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq
 HP2107901_DHT.data <- Read10X(data.dir = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Raw Data\F9b_GEX_HP21079_01_DHT\filtered_feature_bc_matrix)")
 
 # STEP 2: Create Seurat objects ####
-HP2107001_ctrl <- CreateSeuratObject(counts = HP2107001_ctrl.data)
-HP2107001_DHT <- CreateSeuratObject(counts = HP2107001_DHT.data)
-HP2107701_ctrl <- CreateSeuratObject(counts = HP2107701_ctrl.data)
-HP2107701_DHT <- CreateSeuratObject(counts = HP2107701_DHT.data)
-HP2107901_ctrl <- CreateSeuratObject(counts = HP2107901_ctrl.data)
-HP2107901_DHT <- CreateSeuratObject(counts = HP2107901_DHT.data)
+HP2107001_ctrl <- CreateSeuratObject(counts = HP2107001_ctrl.data, min.features = 500)
+HP2107001_DHT <- CreateSeuratObject(counts = HP2107001_DHT.data, min.features = 500)
+HP2107701_ctrl <- CreateSeuratObject(counts = HP2107701_ctrl.data, min.features = 500)
+HP2107701_DHT <- CreateSeuratObject(counts = HP2107701_DHT.data, min.features = 500)
+HP2107901_ctrl <- CreateSeuratObject(counts = HP2107901_ctrl.data, min.features = 500)
+HP2107901_DHT <- CreateSeuratObject(counts = HP2107901_DHT.data, min.features = 500)
 
 # Sample specific Metadata addition
 HP2107001_ctrl$sample <- "HP2107001_ctrl"
@@ -116,11 +116,6 @@ pancreas.list <- list("HP2107001_ctrl" = HP2107001_ctrl, "HP2107001_DHT" = HP210
                       "HP2107901_ctrl" = HP2107901_ctrl, "HP2107901_DHT" = HP2107901_DHT)
 
 # Step 6: Data normalization
-# Normalize the dataset using SCTransform
-for (i in 1:length(pancreas.list)) {
-  pancreas.list[[i]] <- SCTransform(pancreas.list[[i]], verbose = TRUE)
-}
-
 #Normalise data
 pancreas.list <- lapply(X = pancreas.list, FUN = function(x) {
   x <- NormalizeData(x, verbose = FALSE)
@@ -129,7 +124,7 @@ pancreas.list <- lapply(X = pancreas.list, FUN = function(x) {
 
 # Step 7: Feature selection
 # Select features for downstream integration
-pancreas.features <- SelectIntegrationFeatures(object.list = pancreas.list, nfeatures = 3000)
+pancreas.features <- SelectIntegrationFeatures(object.list = pancreas.list)
 pancreas.list <- lapply(X = pancreas.list, FUN = function(x) {
   x <- ScaleData(x, features = pancreas.features, verbose = FALSE)
   x <- RunPCA(x, features = pancreas.features, verbose = FALSE)
@@ -137,9 +132,10 @@ pancreas.list <- lapply(X = pancreas.list, FUN = function(x) {
 
 # Step 8: Anchor identification and data integration
 # Identify anchors and integrate dataset
-pancreas.anchors <- FindIntegrationAnchors(object.list = pancreas.list, reference = c(1,3,5), 
-                                           anchor.features = pancreas.features, reduction = "rpca", dims = 1:50, verbose = TRUE)
-pancreas.integrated <- IntegrateData(anchorset = pancreas.anchors, dims = 1:50, verbose = TRUE)
+pancreas.list[c(1, 3, 5)] # check that you are correctly picking up control datasets for refrence integration
+pancreas.anchors <- FindIntegrationAnchors(object.list = pancreas.list, reference = c(1,3,5), # Takes 18min 13sec to run when using cca as reduction
+                                           reduction = "rpca", dims = 1:30, verbose = TRUE)
+pancreas.integrated <- IntegrateData(anchorset = pancreas.anchors, dims = 1:30, verbose = TRUE)
 
 # Step 9: Linear dimensionality assessment
 # Look at your default assay
@@ -147,6 +143,9 @@ DefaultAssay(object = pancreas.integrated)
 
 # Change default assay to integrated, to view dimensionality
 DefaultAssay(object = pancreas.integrated) <- "integrated"
+
+# Scaling this is weird, but as done in https://satijalab.org/seurat/articles/integration_large_datasets.html
+pancreas.integrated <- ScaleData(pancreas.integrated, verbose = FALSE)
 
 # Dimensionality assessment using PCA analysis
 pancreas.integrated <- RunPCA(pancreas.integrated, features = VariableFeatures(object = pancreas.integrated))
@@ -168,8 +167,7 @@ pancreas.integrated <- FindClusters(object = pancreas.integrated, resolution = 0
 # Cluster-tree analysis, looking appropriate non-anomalous clustering resolution
 clustree(pancreas.integrated, prefix = "integrated_snn_res.")
 
-# Based of clustree assessment choose res = 0.3, stable yet biologically relevant
-# Beyond 0.4 massive cluster destabilization occurs
+# Based of clustree assessment choose res = 0.3, conservative approach
 pancreas.integrated <- FindClusters(pancreas.integrated, resolution = 0.3)
 
 # Alternatively build a cluster tree
@@ -183,17 +181,21 @@ pancreas.integrated <- RunUMAP(pancreas.integrated, dims = 1:30)
 
 # Change default assay to integrated, to view dimensionality
 Idents(pancreas.integrated) <- "treatment"
+Idents(pancreas.integrated) <- "sex"
+Idents(pancreas.integrated) <- "sample"
+Idents(pancreas.integrated) <- "seurat_clusters"
 DimPlot(pancreas.integrated, reduction = "umap", label = FALSE)
 
 #Visualize gene expression
 DefaultAssay(object = pancreas.integrated) <- "RNA"
+DefaultAssay(object = pancreas.integrated)
 FeaturePlot(object = pancreas.integrated,
-            features = c("VWF"),
+            features = c("SOX10"),
             pt.size = 1,
             cols = c("darkgrey", "red"),
-            min.cutoff = 0,
+            #min.cutoff = 0,
             #max.cutoff = 10,
-            slot = 'data',
+            slot = 'counts',
             order = TRUE)
 
 # At this point, I discovered that there are a cluster of cells which contain a mixture of alpha-beta cells
