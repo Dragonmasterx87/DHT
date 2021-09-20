@@ -190,7 +190,7 @@ DimPlot(pancreas.integrated, reduction = "umap", label = FALSE)
 DefaultAssay(object = pancreas.integrated) <- "RNA"
 DefaultAssay(object = pancreas.integrated)
 FeaturePlot(object = pancreas.integrated,
-            features = c("SOX10"),
+            features = c("MT-CO3"),
             pt.size = 1,
             cols = c("darkgrey", "red"),
             #min.cutoff = 0,
