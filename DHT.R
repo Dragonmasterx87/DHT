@@ -317,9 +317,9 @@ Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("B
                                                                               "Ductal", "Acinar", 
                                                                               "Quiescent Stellate", "Activated Stellate", "Proliferating Stellate", 
                                                                               "Macrophage", "T-Lymphocyte", "Mast", "Schwann", "Endothelial"))
-markers.to.plot <- c("INS", "MAFA", "IAPP", "GCG", "DPP4", "GC", "LEPR", "SST", "FRZB", "PPY", "CALB1", "THSD7A",
-                     "CFTR", "TFPI2", "MMP7", "CELA2A", "CELA2B", "CELA3A", "COL3A1", "FMOD", "PDGFRB", 
-                     "SOX10", "CDH19", "NGFR", "CD34", "ENG", "VWF", "CD86", "CSF1R", "FCER1G", "NKG7", "IL2RB", "CCL5")
+markers.to.plot <- c("INS", "IAPP", "NKX6-1", "MAFA", "MAFB", "GCG", "DPP4", "GC", "LEPR", "SST", "FRZB", "PPY", "CALB1", "THSD7A",
+                     "CFTR", "KRT19", "MMP7", "CELA2A", "CELA2B", "CELA3A", "COL3A1", "FMOD", "PDGFRB", "MKI67", "HIST1H4C", "STMN1", 
+                     "CD86", "CSF1R", "SDS", "NKG7", "IL2RB", "CCL5", "RGS13", "TPSB2", "TPSAB1", "SOX10", "CDH19", "NGFR", "CD34", "ENG", "VWF")
 
 # Advanced coding for ggplot2
 # Create a new metadata slot containing combined info, segregating clusters and samples
@@ -328,10 +328,10 @@ pancreas.integrated$celltype.sample <- paste(Idents(pancreas.integrated),pancrea
 table(pancreas.integrated@meta.data$celltype.sample)
 
 # New metadata column is not paired, so we need to pair
-my_levels2 <- c("beta_EtOH", "beta_DHT[10nM]", "alpha_EtOH", "alpha_DHT[10nM]", "delta_EtOH", "delta_DHT[10nM]", 
-                "gamma_EtOH", "gamma_DHT[10nM]", "ductal_EtOH", "ductal_DHT[10nM]", "acinar_EtOH", "acinar_DHT[10nM]", 
-                "stellate_EtOH", "stellate_DHT[10nM]", "schwann_EtOH", "schwann_DHT[10nM]", "endothelium_EtOH", "endothelium_DHT[10nM]", 
-                "macrophage_EtOH", "macrophage_DHT[10nM]", "lymphocytes_EtOH", "lymphocytes_DHT[10nM]")
+my_levels2 <- c("Beta_EtOH", "Beta_DHT[10nM]", "Transdifferentiating Endocrine_EtOH", "Transdifferentiating Endocrine_DHT[10nM]", "Alpha_EtOH", "Alpha_DHT[10nM]", "Delta_EtOH", "Delta_DHT[10nM]", "Gamma_EtOH", "Gamma_DHT[10nM]", 
+                "Ductal_EtOH", "Ductal_DHT[10nM]", "Acinar_EtOH", "Acinar_DHT[10nM]", 
+                "Quiescent Stellate_EtOH", "Quiescent Stellate_DHT[10nM]", "Activated Stellate_EtOH", "Activated Stellate_DHT[10nM]", "Proliferating Stellate_EtOH", "Proliferating Stellate_DHT[10nM]",
+                "Macrophage_EtOH", "Macrophage_DHT[10nM]", "T-Lymphocyte_EtOH", "T-Lymphocyte_DHT[10nM]", "Mast_EtOH", "Mast_DHT[10nM]", "Schwann_EtOH", "Schwann_DHT[10nM]", "Endothelial_EtOH", "Endothelial_DHT[10nM]")
 head(pancreas.integrated@meta.data$celltype)
 
 # Re-level object@meta.data this just orders the actual metadata slot, so when you pull its already ordered
@@ -372,23 +372,40 @@ DotPlot(pancreas.integrated, features = rev(markers.to.plot),
         legend.text=element_text(size=10))
 
 # Diff gene testing across conditions
-pancreas.integrated$treatment.dht <- paste(Idents(pancreas.integrated), pancreas.integrated$treatment, sep = "_")
-pancreas.integrated$celltype.split <- Idents(pancreas.integrated)
-Idents(pancreas.integrated) <- "treatment.dht"
-beta.DHT.response <- FindMarkers(pancreas.integrated, ident.1 = "beta_EtOH", ident.2 = "beta_DHT[10nM]", verbose = FALSE)
+# pancreas.integrated$treatment.dht <- paste(Idents(pancreas.integrated), pancreas.integrated$treatment, sep = "_")
+# pancreas.integrated$celltype.split <- Idents(pancreas.integrated)
+Idents(pancreas.integrated) <- "celltype.sample"
+beta.DHT.response <- FindMarkers(pancreas.integrated, 
+                                 ident.1 = "Beta_DHT[10nM]", ident.2 = "Beta_EtOH", 
+                                 test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                 min.pct = 0.1,
+                                 logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                 pseudocount.use = 1,
+                                 verbose = FALSE)
 head(beta.DHT.response, n = 15)
+write.csv(beta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\beta.DHT.response.csv)")
+
+alpha.DHT.response <- FindMarkers(pancreas.integrated, 
+                                 ident.1 = "Alpha_DHT[10nM]", ident.2 = "Alpha_EtOH", 
+                                 test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                 min.pct = 0.1,
+                                 logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                 pseudocount.use = 1,
+                                 verbose = FALSE)
+head(alpha.DHT.response, n = 15)
+write.csv(alpha.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\alpha.DHT.response.csv)")
+
+# Plotting DE genes
+Idents(pancreas.integrated) <- "celltype"
+beta.cells <- subset(pancreas.integrated, idents = "Beta")
+plots <- VlnPlot(beta.cells, features = c("INS", "DDIT3", "MIF", "DEPP1", "PLCG2", "IAPP"), group.by = "treatment", 
+                 pt.size = 1, combine = TRUE)
+plots <- VlnPlot(beta.cells, features = c("MT-CO3", "MT-ND1", "MT-ND4", "MT-ATP6", "MT-CO1", "MT-CYB"), group.by = "treatment", 
+                 pt.size = 1, combine = TRUE)
+wrap_plots(plots = plots, nrow = 1, ncol = 1)
 
 
-plots <- VlnPlot(beta.cells, features = c("MT-CO3", "MAF", "AR"), group.by = "treatment", 
-                 pt.size = 0, combine = TRUE)
-wrap_plots(plots = plots, nrow = 1)
-
-
-
-VlnPlot(pancreas.integrated, features = c("MT-CO3", "MT-ND1", "MT-ATP6", "CA2", "PDK4"), group.by = "treatment")
-write.csv(beta.DHT.response, file = "D:/R-Projects/DHT/Data output/beta.DHT.response.csv")
-
-
+# Calculating percentages
 X1 <- NULL
 table(x = FetchData(pancreas.integrated, vars = c('celltype', 'sex')))
 x1 <- subset(pancreas.integrated, subset = (celltype == c("beta", "alpha")) & (sex == "Male"))
