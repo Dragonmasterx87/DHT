@@ -1,7 +1,8 @@
 # LOAD LIBRARIES ####
 # Restart Rstudio or R
 # Run the following code once you have Seurat installed
-suppressWarnings({
+suppressWarnings(
+  {
   library(ggplot2)
   library(cowplot)
   library(Matrix)
@@ -14,7 +15,9 @@ suppressWarnings({
   library(clustree)
   library(patchwork)
   library(future)
-  library(DoubletFinder)})
+  library(DoubletFinder)
+  }
+)
 
 # CONFIRM CORRECT INSTALL ####
 # Confirm package version of Seurat and Monocle
