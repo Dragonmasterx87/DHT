@@ -1,8 +1,7 @@
 # LOAD LIBRARIES ####
 # Restart Rstudio or R
 # Run the following code once you have Seurat installed
-suppressWarnings(
-  {
+suppressWarnings({
   library(ggplot2)
   library(cowplot)
   library(Matrix)
@@ -15,9 +14,7 @@ suppressWarnings(
   library(clustree)
   library(patchwork)
   library(future)
-  library(DoubletFinder)
-  }
-)
+  library(DoubletFinder)})
 
 # CONFIRM CORRECT INSTALL ####
 # Confirm package version of Seurat and Monocle
@@ -248,21 +245,23 @@ Idents(pancreas.integrated) <- "celltype"
 DimPlot(pancreas.integrated, split.by = "sample", group.by = "celltype", label = FALSE, ncol = 2)
 DimPlot(pancreas.integrated, group.by = "treatment")
 DimPlot(pancreas.integrated, reduction = "umap", 
-        cols = c("darkgreen",
-                 "red",
-                 "sienna3",
-                 "mediumseagreen",
-                 "turquoise4",
-                 "black",
-                 "royalblue1",
-                 "yellow4",
-                 "gray30",
-                 "darkred",
-                 "orange2",
-                 "darkmagenta",
-                 "deeppink2"
+        cols = c("red4",
+                 "darkorange",
+                 "sienna",
+                 "indianred",
+                 "orangered1",
+                 "darkturquoise",
+                 "paleturquoise",
+                 "lightgreen",
+                 "springgreen4",
+                 "darkolivegreen",
+                 "purple4",
+                 "purple",
+                 "deeppink",
+                 "violetred",
+                 "violet"
                  ),
-                 label = TRUE)
+                 label = FALSE)
 
 # Save file this will change but for showing them on 07132021 its fine
 saveRDS(pancreas.integrated, file = "C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds")
