@@ -249,7 +249,8 @@ Idents(pancreas.integrated) <- "celltype"
 # Observing cells
 DimPlot(pancreas.integrated, split.by = "sample", group.by = "celltype", label = FALSE, ncol = 2)
 DimPlot(pancreas.integrated, group.by = "treatment")
-DimPlot(pancreas.integrated, reduction = "umap", 
+UMAPPlot(pancreas.integrated, reduction = "umap",
+        pt.size = .75,
         cols = c("red",
                  "red4",
                  "orange",
@@ -426,8 +427,9 @@ DotPlot(pancreas.integrated, features = rev(markers.to.plot),
 # pancreas.integrated$treatment.dht <- paste(Idents(pancreas.integrated), pancreas.integrated$treatment, sep = "_")
 # pancreas.integrated$celltype.split <- Idents(pancreas.integrated)
 # choosing only those genes which are differentially expressed
-# Optimise idents
+# Optimise idents and assay
 Idents(pancreas.integrated) <- "celltype.sample"
+DefaultAssay(object = pancreas.integrated) <- "RNA"
 
 # 1.Beta-cells (INS Hi)
 beta.INSHi.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -618,9 +620,200 @@ write.csv(endothelial.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAse
 
 #
 #
+#
+#
+#
 # Running DE for all genes irrlevant of FC and PCT filtering
-# 1.Beta-cells
+# Optimise idents
+Idents(pancreas.integrated) <- "celltype.sample"
+DefaultAssay(object = pancreas.integrated) <- "RNA"
 
+# 1.Beta-cells (INS Hi)
+beta.INSHi.DHT.response <- FindMarkers(pancreas.integrated, 
+                                       ident.1 = "Beta INS-hi_DHT[10nM]", ident.2 = "Beta INS-hi_EtOH", 
+                                       test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                       min.pct = 0,
+                                       logfc.threshold = 0, 
+                                       pseudocount.use = 1,
+                                       verbose = TRUE)
+head(beta.INSHi.DHT.response, n = 15)
+write.csv(beta.INSHi.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\beta.INSHi.DHT.response.csv)")
+
+# 2.Beta-cells (INS low)
+beta.INSLow.DHT.response <- FindMarkers(pancreas.integrated, 
+                                        ident.1 = "Beta INS-low_DHT[10nM]", ident.2 = "Beta INS-low_EtOH", 
+                                        test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                        min.pct = 0,
+                                        logfc.threshold = 0, 
+                                        pseudocount.use = 1,
+                                        verbose = TRUE)
+head(beta.INSLow.DHT.response, n = 15)
+write.csv(beta.INSLow.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\beta.INSLow.DHT.response.csv)")
+
+# 3.Alpha-cells (GCG hi)
+alpha.GCGHi.DHT.response <- FindMarkers(pancreas.integrated, 
+                                        ident.1 = "Alpha GCG-hi_DHT[10nM]", ident.2 = "Alpha GCG-hi_EtOH", 
+                                        test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                        min.pct = 0,
+                                        logfc.threshold = 0,
+                                        pseudocount.use = 1,
+                                        verbose = TRUE)
+head(alpha.GCGHi.DHT.response, n = 15)
+write.csv(alpha.GCGHi.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\alpha.GCGHi.DHT.response.csv)")
+
+# 4.Alpha-cells (GCG low)
+alpha.GCGLow.DHT.response <- FindMarkers(pancreas.integrated, 
+                                         ident.1 = "Alpha GCG-low_DHT[10nM]", ident.2 = "Alpha GCG-low_EtOH", 
+                                         test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                         min.pct = 0,
+                                         logfc.threshold = 0, 
+                                         pseudocount.use = 1,
+                                         verbose = TRUE)
+head(alpha.GCGLow.DHT.response, n = 15)
+write.csv(alpha.GCGLow.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\alpha.GCGLow.DHT.response.csv)")
+
+# 5.Trandifferentiating Endocrine-Cells
+tranbeta.DHT.response <- FindMarkers(pancreas.integrated, 
+                                     ident.1 = "Transdifferentiating Beta_DHT[10nM]", ident.2 = "Transdifferentiating Beta_EtOH", 
+                                     test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                     min.pct = 0,
+                                     logfc.threshold = 0,
+                                     pseudocount.use = 1,
+                                     verbose = TRUE)
+head(tranbeta.DHT.response, n = 15)
+write.csv(tranbeta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\tranbeta.DHT.response.csv)")
+
+# 6.Delta-Cells
+delta.DHT.response <- FindMarkers(pancreas.integrated, 
+                                  ident.1 = "Delta_DHT[10nM]", ident.2 = "Delta_EtOH", 
+                                  test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                  min.pct = 0,
+                                  logfc.threshold = 0, 
+                                  pseudocount.use = 1,
+                                  verbose = TRUE)
+head(delta.DHT.response, n = 15)
+write.csv(delta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\delta.DHT.response.csv)")
+
+# 7.Gamma-Cells
+gamma.DHT.response <- FindMarkers(pancreas.integrated, 
+                                  ident.1 = "Gamma_DHT[10nM]", ident.2 = "Gamma_EtOH", 
+                                  test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                  min.pct = 0,
+                                  logfc.threshold = 0, 
+                                  pseudocount.use = 1,
+                                  verbose = TRUE)
+head(gamma.DHT.response, n = 15)
+write.csv(gamma.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\gamma.DHT.response.csv)")
+
+# 8.Ductal-Cells
+ductal.DHT.response <- FindMarkers(pancreas.integrated, 
+                                   ident.1 = "Ductal_DHT[10nM]", ident.2 = "Ductal_EtOH", 
+                                   test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                   min.pct = 0,
+                                   logfc.threshold = 0, 
+                                   pseudocount.use = 1,
+                                   verbose = TRUE)
+head(ductal.DHT.response, n = 15)
+write.csv(ductal.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\ductal.DHT.response.csv)")
+
+# 9.Acinar-Cells
+acinar.DHT.response <- FindMarkers(pancreas.integrated, 
+                                   ident.1 = "Acinar_DHT[10nM]", ident.2 = "Acinar_EtOH", 
+                                   test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                   min.pct = 0,
+                                   logfc.threshold = 0, 
+                                   pseudocount.use = 1,
+                                   verbose = TRUE)
+head(acinar.DHT.response, n = 15)
+write.csv(acinar.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\acinar.DHT.response.csv)")
+
+# 10.Quiescent Stellate-Cells
+qstellate.DHT.response <- FindMarkers(pancreas.integrated, 
+                                      ident.1 = "Quiescent Stellate_DHT[10nM]", ident.2 = "Quiescent Stellate_EtOH", 
+                                      test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                      min.pct = 0,
+                                      logfc.threshold = 0, 
+                                      pseudocount.use = 1,
+                                      verbose = TRUE)
+head(qstellate.DHT.response, n = 15)
+write.csv(qstellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\qstellate.DHT.response.csv)")
+
+# 11.Activated Stellate-Cells
+astellate.DHT.response <- FindMarkers(pancreas.integrated, 
+                                      ident.1 = "Activated Stellate_DHT[10nM]", ident.2 = "Activated Stellate_EtOH", 
+                                      test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                      min.pct = 0,
+                                      logfc.threshold = 0, 
+                                      pseudocount.use = 1,
+                                      verbose = TRUE)
+head(astellate.DHT.response, n = 15)
+write.csv(astellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\astellate.DHT.response.csv)")
+
+# 12.Proliferating Stellate-Cells
+pstellate.DHT.response <- FindMarkers(pancreas.integrated, 
+                                      ident.1 = "Proliferating Stellate_DHT[10nM]", ident.2 = "Proliferating Stellate_EtOH", 
+                                      test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                      min.pct = 0,
+                                      logfc.threshold = 0, 
+                                      pseudocount.use = 1,
+                                      verbose = TRUE)
+head(pstellate.DHT.response, n = 15)
+write.csv(pstellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\pstellate.DHT.response.csv)")
+
+# 13.Macrophage-Cells
+macrophage.DHT.response <- FindMarkers(pancreas.integrated, 
+                                       ident.1 = "Macrophage_DHT[10nM]", ident.2 = "Macrophage_EtOH", 
+                                       test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                       min.pct = 0,
+                                       logfc.threshold = 0, # based on output log2 so 0.137504 is ~1.1 FC
+                                       pseudocount.use = 1,
+                                       verbose = TRUE)
+head(macrophage.DHT.response, n = 15)
+write.csv(macrophage.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\macrophage.DHT.response.csv)")
+
+# 14.T Lymphocyte-Cells
+tlympho.DHT.response <- FindMarkers(pancreas.integrated, 
+                                    ident.1 = "T-Lymphocyte_DHT[10nM]", ident.2 = "T-Lymphocyte_EtOH", 
+                                    test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                    min.pct = 0,
+                                    logfc.threshold = 0, # based on output log2 so 0.137504 is ~1.1 FC
+                                    pseudocount.use = 1,
+                                    verbose = TRUE)
+head(tlympho.DHT.response, n = 15)
+write.csv(tlympho.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\tlympho.DHT.response.csv)")
+
+# 15.Mast-Cells
+mast.DHT.response <- FindMarkers(pancreas.integrated, 
+                                 ident.1 = "Mast_DHT[10nM]", ident.2 = "Mast_EtOH", 
+                                 test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                 min.pct = 0,
+                                 logfc.threshold = 0, # based on output log2 so 0.137504 is ~1.1 FC
+                                 pseudocount.use = 1,
+                                 verbose = TRUE)
+head(mast.DHT.response, n = 15)
+write.csv(mast.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\mast.DHT.response.csv)")
+
+# 16.Schwann-Cells
+schwann.DHT.response <- FindMarkers(pancreas.integrated, 
+                                    ident.1 = "Schwann_DHT[10nM]", ident.2 = "Schwann_EtOH", 
+                                    test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                    min.pct = 0,
+                                    logfc.threshold = 0, # based on output log2 so 0.137504 is ~1.1 FC
+                                    pseudocount.use = 1,
+                                    verbose = TRUE)
+head(schwann.DHT.response, n = 15)
+write.csv(schwann.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\schwann.DHT.response.csv)")
+
+# 17.Endothelial-Cells
+endothelial.DHT.response <- FindMarkers(pancreas.integrated, 
+                                        ident.1 = "Endothelial_DHT[10nM]", ident.2 = "Endothelial_EtOH", 
+                                        test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                        min.pct = 0,
+                                        logfc.threshold = 0, # based on output log2 so 0.137504 is ~1.1 FC
+                                        pseudocount.use = 1,
+                                        verbose = TRUE)
+head(endothelial.DHT.response, n = 15)
+write.csv(endothelial.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\endothelial.DHT.response.csv)")
 
 # Plotting DE genes
 Idents(pancreas.integrated) <- "celltype"
