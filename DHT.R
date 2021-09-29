@@ -14,7 +14,9 @@ suppressWarnings({
   library(clustree)
   library(patchwork)
   library(future)
-  library(DoubletFinder)})
+  library(DoubletFinder)
+  }
+  )
 
 # CONFIRM CORRECT INSTALL ####
 # Confirm package version of Seurat and Monocle
@@ -167,8 +169,8 @@ pancreas.integrated <- FindClusters(object = pancreas.integrated, resolution = 0
 # Cluster-tree analysis, looking appropriate non-anomalous clustering resolution
 clustree(pancreas.integrated, prefix = "integrated_snn_res.")
 
-# Based of clustree assessment choose res = 0.3, conservative approach
-pancreas.integrated <- FindClusters(pancreas.integrated, resolution = 0.3)
+# Based of clustree assessment choose res = 0.5
+pancreas.integrated <- FindClusters(pancreas.integrated, resolution = 0.5)
 
 # Alternatively build a cluster tree
 DefaultAssay(object = pancreas.integrated) <- "integrated"
@@ -184,41 +186,44 @@ Idents(pancreas.integrated) <- "treatment"
 Idents(pancreas.integrated) <- "sex"
 Idents(pancreas.integrated) <- "sample"
 Idents(pancreas.integrated) <- "seurat_clusters"
+#Idents(pancreas.integrated) <- "integrated_snn_res.0.3"
 DimPlot(pancreas.integrated, reduction = "umap", label = TRUE)
 
 #Visualize gene expression
 DefaultAssay(object = pancreas.integrated) <- "RNA"
 DefaultAssay(object = pancreas.integrated)
 FeaturePlot(object = pancreas.integrated,
-            features = c("MKI67"),
+            features = c("AR"),
             pt.size = 1,
             cols = c("darkgrey", "red"),
             #min.cutoff = 0,
-            #max.cutoff = 10,
+            max.cutoff = 1,
             slot = 'counts',
             order = TRUE)
 
 #Rename Idents
 pancreas.integrated <- RenameIdents(pancreas.integrated, 
-                                    "0" = "Alpha", 
-                                    "1" = "Beta",
+                                    "0" = "Beta INS-hi", 
+                                    "1" = "Alpha GCG-hi",
                                     "2" = "Ductal", 
-                                    "3" = "Beta",
-                                    "4" = "Transdifferentiating Endocrine", 
+                                    "3" = "Transdifferentiating Beta",
+                                    "4" = "Beta INS-low", 
                                     "5" = "Acinar",
                                     "6" = "Activated Stellate", 
-                                    "7" = "Quiescent Stellate",
+                                    "7" = "Ductal",
                                     "8" = "Endothelial", 
                                     "9" = "Delta",
-                                    "10" = "Alpha", 
-                                    "11" = "Ductal",
-                                    "12" = "Gamma",
+                                    "10" = "Alpha GCG-hi", 
+                                    "11" = "Quiescent Stellate",
+                                    "12" = "Alpha GCG-low",
                                     "13" = "Ductal",
-                                    "14" = "Macrophage",
-                                    "15" = "Proliferating Stellate",
-                                    "16" = "Schwann",
-                                    "17" = "Mast",
-                                    "18" = "T-Lymphocyte"
+                                    "14" = "Quiescent Stellate",
+                                    "15" = "Gamma",
+                                    "16" = "Macrophage",
+                                    "17" = "Proliferating Stellate",
+                                    "18" = "Schwann",
+                                    "19" = "Mast",
+                                    "20" = "T-Lymphocyte"
                                     )
 
 DimPlot(pancreas.integrated, reduction = "umap", label = TRUE)
@@ -230,7 +235,7 @@ head(pancreas.integrated@meta.data)
 
 # Define an order of cluster identities remember after this step-
 # cluster re-assignment occurs, which re-assigns clustering in my_levels
-my_levels <- c("Beta", "Alpha", "Transdifferentiating Endocrine", "Delta", "Gamma", 
+my_levels <- c("Beta INS-hi", "Beta INS-low", "Alpha GCG-hi", "Alpha GCG-low", "Transdifferentiating Beta", "Delta", "Gamma", 
                "Ductal", "Acinar", 
                "Quiescent Stellate", "Activated Stellate", "Proliferating Stellate",
                "Macrophage", "T-Lymphocyte", "Mast",
@@ -245,8 +250,10 @@ Idents(pancreas.integrated) <- "celltype"
 DimPlot(pancreas.integrated, split.by = "sample", group.by = "celltype", label = FALSE, ncol = 2)
 DimPlot(pancreas.integrated, group.by = "treatment")
 DimPlot(pancreas.integrated, reduction = "umap", 
-        cols = c("red4",
-                 "darkorange",
+        cols = c("red",
+                 "red4",
+                 "orange",
+                 "lightgoldenrod3",
                  "sienna",
                  "indianred",
                  "orangered1",
@@ -264,19 +271,25 @@ DimPlot(pancreas.integrated, reduction = "umap",
                  label = FALSE)
 
 # Save file this will change but for showing them on 07132021 its fine
-saveRDS(pancreas.integrated, file = "C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds")
-pancreas.integrated <- readRDS("C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds")
+#saveRDS(pancreas.integrated, file = r"(C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds)")
+#pancreas.integrated <- readRDS(r"(C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds)")
 
 # Identify conserved cell markers
 DefaultAssay(pancreas.integrated) <- "RNA"
-markers.beta <- FindConservedMarkers(pancreas.integrated, ident.1 = "Beta", grouping.var = "treatment", verbose = TRUE)
-head(markers.beta)
+markers.beta.hi <- FindConservedMarkers(pancreas.integrated, ident.1 = "Beta INS-hi", grouping.var = "treatment", verbose = TRUE)
+head(markers.beta.hi)
 
-markers.alpha <- FindConservedMarkers(pancreas.integrated, ident.1 = "Alpha", grouping.var = "treatment", verbose = TRUE)
-head(markers.alpha)
+markers.beta.low <- FindConservedMarkers(pancreas.integrated, ident.1 = "Beta INS-low", grouping.var = "treatment", verbose = TRUE)
+head(markers.beta.low)
 
-markers.tranendo <- FindConservedMarkers(pancreas.integrated, ident.1 = "Transdifferentiating Endocrine", grouping.var = "treatment", verbose = TRUE)
-head(markers.tranendo)
+markers.alpha.hi <- FindConservedMarkers(pancreas.integrated, ident.1 = "Alpha GCG-hi", grouping.var = "treatment", verbose = TRUE)
+head(markers.alpha.hi)
+
+markers.alpha.low <- FindConservedMarkers(pancreas.integrated, ident.1 = "Alpha GCG-low", grouping.var = "treatment", verbose = TRUE)
+head(markers.alpha.low)
+
+markers.transbeta <- FindConservedMarkers(pancreas.integrated, ident.1 = "Transdifferentiating Beta", grouping.var = "treatment", verbose = TRUE)
+head(markers.transbeta)
 
 markers.delta <- FindConservedMarkers(pancreas.integrated, ident.1 = "Delta", grouping.var = "treatment", verbose = TRUE)
 head(markers.delta)
@@ -314,8 +327,43 @@ head(markers.schwann)
 markers.endothelial <- FindConservedMarkers(pancreas.integrated, ident.1 = "Endothelial", grouping.var = "treatment", verbose = TRUE)
 head(markers.endothelial)
 
+# Now over-write the SCT assay with new-analyzed data from this subsetted data
+pancreas.integrated <- SCTransform(pancreas.integrated, assay = "RNA", new.assay.name = "SCT", verbose = TRUE, return.only.var.genes = TRUE)
+
+# Find markers for every cluster compared to all remaining cells, report only the positive ones
+# Here we define a DE gene as a gene which has:
+# Fold Change of >1.1x
+# Atleast 10% of cells express that gene
+Idents(object = pancreas.integrated) <- "celltype"
+pancreas.integrated.markers <- FindAllMarkers(object = pancreas.integrated, 
+                                                  features = VariableFeatures(pancreas.integrated, assay = 'integrated'), 
+                                                  only.pos = TRUE, 
+                                                  min.pct = 0.1, 
+                                                  logfc.threshold = 0.137504, 
+                                                  assay = 'SCT',
+                                                  slot = c('data'))
+
+pancreas.integrated.markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_log2FC)
+write.csv(pancreas.integrated.markers, r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\pancreas.integrated.markers.SCT.csv)")
+
+# Look at your default assay
+DefaultAssay(object = pancreas.integrated)
+
+# Change default assay to SCT, save information in the "SCT" assay
+# You can toggle between integrated, SCT and RNA to see different expression profiles/different normalizations
+DefaultAssay(object = pancreas.integrated) <- "integrated"
+
+# Create heatmap using doheatmap
+top10.nomes <- pancreas.integrated.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_log2FC)
+DoHeatmap(object = pancreas.integrated, 
+          features = top10.nomes$gene, 
+          disp.min = -1, 
+          disp.max = 1,
+          label = FALSE) + scale_fill_gradientn(colors = colorRampPalette(c("#0200ad", 
+                                                                            "#fbfcbd", 
+                                                                            "#ff0000"))(256))
 # Identify conserved cell markers
-Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("Beta", "Alpha", "Transdifferentiating Endocrine", "Delta", "Gamma", 
+Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("Beta INS-hi", "Beta INS-low", "Alpha GCG-hi", "Alpha GCG-low", "Transdifferentiating Beta", "Delta", "Gamma", 
                                                                               "Ductal", "Acinar", 
                                                                               "Quiescent Stellate", "Activated Stellate", "Proliferating Stellate", 
                                                                               "Macrophage", "T-Lymphocyte", "Mast", "Schwann", "Endothelial"))
@@ -330,7 +378,7 @@ pancreas.integrated$celltype.sample <- paste(Idents(pancreas.integrated),pancrea
 table(pancreas.integrated@meta.data$celltype.sample)
 
 # New metadata column is not paired, so we need to pair
-my_levels2 <- c("Beta_EtOH", "Beta_DHT[10nM]", "Transdifferentiating Endocrine_EtOH", "Transdifferentiating Endocrine_DHT[10nM]", "Alpha_EtOH", "Alpha_DHT[10nM]", "Delta_EtOH", "Delta_DHT[10nM]", "Gamma_EtOH", "Gamma_DHT[10nM]", 
+my_levels2 <- c("Beta INS-hi_EtOH", "Beta INS-hi_DHT[10nM]", "Beta INS-low_EtOH", "Beta INS-low_DHT[10nM]", "Transdifferentiating Beta_EtOH", "Transdifferentiating Beta_DHT[10nM]", "Alpha GCG-hi_EtOH", "Alpha GCG-hi_DHT[10nM]", "Alpha GCG-low_EtOH", "Alpha GCG-low_DHT[10nM]", "Delta_EtOH", "Delta_DHT[10nM]", "Gamma_EtOH", "Gamma_DHT[10nM]", 
                 "Ductal_EtOH", "Ductal_DHT[10nM]", "Acinar_EtOH", "Acinar_DHT[10nM]", 
                 "Quiescent Stellate_EtOH", "Quiescent Stellate_DHT[10nM]", "Activated Stellate_EtOH", "Activated Stellate_DHT[10nM]", "Proliferating Stellate_EtOH", "Proliferating Stellate_DHT[10nM]",
                 "Macrophage_EtOH", "Macrophage_DHT[10nM]", "T-Lymphocyte_EtOH", "T-Lymphocyte_DHT[10nM]", "Mast_EtOH", "Mast_DHT[10nM]", "Schwann_EtOH", "Schwann_DHT[10nM]", "Endothelial_EtOH", "Endothelial_DHT[10nM]")
@@ -342,6 +390,7 @@ table(pancreas.integrated@meta.data$celltype.sample)
 
 # Re select organized idents
 Idents(pancreas.integrated) <- "celltype.sample"
+DefaultAssay(object = pancreas.integrated) <- "RNA"
 DotPlot(pancreas.integrated,  
         dot.scale = 8, 
         features = rev(markers.to.plot)) + 
@@ -376,26 +425,202 @@ DotPlot(pancreas.integrated, features = rev(markers.to.plot),
 # Diff gene testing across conditions
 # pancreas.integrated$treatment.dht <- paste(Idents(pancreas.integrated), pancreas.integrated$treatment, sep = "_")
 # pancreas.integrated$celltype.split <- Idents(pancreas.integrated)
+# choosing only those genes which are differentially expressed
+# Optimise idents
 Idents(pancreas.integrated) <- "celltype.sample"
-beta.DHT.response <- FindMarkers(pancreas.integrated, 
-                                 ident.1 = "Beta_DHT[10nM]", ident.2 = "Beta_EtOH", 
-                                 test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
-                                 min.pct = 0.1,
-                                 logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
-                                 pseudocount.use = 1,
-                                 verbose = FALSE)
-head(beta.DHT.response, n = 15)
-write.csv(beta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\beta.DHT.response.csv)")
 
-alpha.DHT.response <- FindMarkers(pancreas.integrated, 
-                                 ident.1 = "Alpha_DHT[10nM]", ident.2 = "Alpha_EtOH", 
+# 1.Beta-cells (INS Hi)
+beta.INSHi.DHT.response <- FindMarkers(pancreas.integrated, 
+                                 ident.1 = "Beta INS-hi_DHT[10nM]", ident.2 = "Beta INS-hi_EtOH", 
                                  test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
                                  min.pct = 0.1,
                                  logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
                                  pseudocount.use = 1,
-                                 verbose = FALSE)
-head(alpha.DHT.response, n = 15)
-write.csv(alpha.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\alpha.DHT.response.csv)")
+                                 verbose = TRUE)
+head(beta.INSHi.DHT.response, n = 15)
+write.csv(beta.INSHi.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\beta.INShi.DHT.response.csv)")
+
+# 2.Beta-cells (INS low)
+beta.INSLow.DHT.response <- FindMarkers(pancreas.integrated, 
+                                       ident.1 = "Beta INS-low_DHT[10nM]", ident.2 = "Beta INS-low_EtOH", 
+                                       test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                       min.pct = 0.1,
+                                       logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                       pseudocount.use = 1,
+                                       verbose = TRUE)
+head(beta.INSLow.DHT.response, n = 15)
+write.csv(beta.INSLow.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\beta.INSLow.DHT.response.csv)")
+
+# 3.Alpha-cells (GCG hi)
+alpha.GCGHi.DHT.response <- FindMarkers(pancreas.integrated, 
+                                 ident.1 = "Alpha GCG-hi_DHT[10nM]", ident.2 = "Alpha GCG-hi_EtOH", 
+                                 test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                 min.pct = 0.1,
+                                 logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                 pseudocount.use = 1,
+                                 verbose = TRUE)
+head(alpha.GCGHi.DHT.response, n = 15)
+write.csv(alpha.GCGHi.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\alpha.GCGHi.DHT.response.csv)")
+
+# 4.Alpha-cells (GCG low)
+alpha.GCGLow.DHT.response <- FindMarkers(pancreas.integrated, 
+                                        ident.1 = "Alpha GCG-low_DHT[10nM]", ident.2 = "Alpha GCG-low_EtOH", 
+                                        test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                        min.pct = 0.1,
+                                        logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                        pseudocount.use = 1,
+                                        verbose = TRUE)
+head(alpha.GCGLow.DHT.response, n = 15)
+write.csv(alpha.GCGLow.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\alpha.GCGLow.DHT.response.csv)")
+
+# 5.Trandifferentiating Endocrine-Cells
+tranbeta.DHT.response <- FindMarkers(pancreas.integrated, 
+                                  ident.1 = "Transdifferentiating Beta_DHT[10nM]", ident.2 = "Transdifferentiating Beta_EtOH", 
+                                  test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                  min.pct = 0.1,
+                                  logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                  pseudocount.use = 1,
+                                  verbose = TRUE)
+head(tranbeta.DHT.response, n = 15)
+write.csv(tranbeta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\tranbeta.DHT.response.csv)")
+
+# 6.Delta-Cells
+delta.DHT.response <- FindMarkers(pancreas.integrated, 
+                                  ident.1 = "Delta_DHT[10nM]", ident.2 = "Delta_EtOH", 
+                                  test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                  min.pct = 0.1,
+                                  logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                  pseudocount.use = 1,
+                                  verbose = TRUE)
+head(delta.DHT.response, n = 15)
+write.csv(delta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\delta.DHT.response.csv)")
+
+# 7.Gamma-Cells
+gamma.DHT.response <- FindMarkers(pancreas.integrated, 
+                                  ident.1 = "Gamma_DHT[10nM]", ident.2 = "Gamma_EtOH", 
+                                  test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                  min.pct = 0.1,
+                                  logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                  pseudocount.use = 1,
+                                  verbose = TRUE)
+head(gamma.DHT.response, n = 15)
+write.csv(gamma.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\gamma.DHT.response.csv)")
+
+# 8.Ductal-Cells
+ductal.DHT.response <- FindMarkers(pancreas.integrated, 
+                                  ident.1 = "Ductal_DHT[10nM]", ident.2 = "Ductal_EtOH", 
+                                  test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                  min.pct = 0.1,
+                                  logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                  pseudocount.use = 1,
+                                  verbose = TRUE)
+head(ductal.DHT.response, n = 15)
+write.csv(ductal.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\ductal.DHT.response.csv)")
+
+# 9.Acinar-Cells
+acinar.DHT.response <- FindMarkers(pancreas.integrated, 
+                                   ident.1 = "Acinar_DHT[10nM]", ident.2 = "Acinar_EtOH", 
+                                   test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                   min.pct = 0.1,
+                                   logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                   pseudocount.use = 1,
+                                   verbose = TRUE)
+head(acinar.DHT.response, n = 15)
+write.csv(acinar.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\acinar.DHT.response.csv)")
+
+# 10.Quiescent Stellate-Cells
+qstellate.DHT.response <- FindMarkers(pancreas.integrated, 
+                                   ident.1 = "Quiescent Stellate_DHT[10nM]", ident.2 = "Quiescent Stellate_EtOH", 
+                                   test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                   min.pct = 0.1,
+                                   logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                   pseudocount.use = 1,
+                                   verbose = TRUE)
+head(qstellate.DHT.response, n = 15)
+write.csv(qstellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\qstellate.DHT.response.csv)")
+
+# 11.Activated Stellate-Cells
+astellate.DHT.response <- FindMarkers(pancreas.integrated, 
+                                      ident.1 = "Activated Stellate_DHT[10nM]", ident.2 = "Activated Stellate_EtOH", 
+                                      test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                      min.pct = 0.1,
+                                      logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                      pseudocount.use = 1,
+                                      verbose = TRUE)
+head(astellate.DHT.response, n = 15)
+write.csv(astellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\astellate.DHT.response.csv)")
+
+# 12.Proliferating Stellate-Cells
+pstellate.DHT.response <- FindMarkers(pancreas.integrated, 
+                                      ident.1 = "Proliferating Stellate_DHT[10nM]", ident.2 = "Proliferating Stellate_EtOH", 
+                                      test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                      min.pct = 0.1,
+                                      logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                      pseudocount.use = 1,
+                                      verbose = TRUE)
+head(pstellate.DHT.response, n = 15)
+write.csv(pstellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\pstellate.DHT.response.csv)")
+
+# 13.Macrophage-Cells
+macrophage.DHT.response <- FindMarkers(pancreas.integrated, 
+                                      ident.1 = "Macrophage_DHT[10nM]", ident.2 = "Macrophage_EtOH", 
+                                      test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                      min.pct = 0.1,
+                                      logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                      pseudocount.use = 1,
+                                      verbose = TRUE)
+head(macrophage.DHT.response, n = 15)
+write.csv(macrophage.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\macrophage.DHT.response.csv)")
+
+# 14.T Lymphocyte-Cells
+tlympho.DHT.response <- FindMarkers(pancreas.integrated, 
+                                      ident.1 = "T-Lymphocyte_DHT[10nM]", ident.2 = "T-Lymphocyte_EtOH", 
+                                      test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                      min.pct = 0.1,
+                                      logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                      pseudocount.use = 1,
+                                      verbose = TRUE)
+head(tlympho.DHT.response, n = 15)
+write.csv(tlympho.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\tlympho.DHT.response.csv)")
+
+# 15.Mast-Cells
+mast.DHT.response <- FindMarkers(pancreas.integrated, 
+                                      ident.1 = "Mast_DHT[10nM]", ident.2 = "Mast_EtOH", 
+                                      test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                      min.pct = 0.1,
+                                      logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                      pseudocount.use = 1,
+                                      verbose = TRUE)
+head(mast.DHT.response, n = 15)
+write.csv(mast.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\mast.DHT.response.csv)")
+
+# 16.Schwann-Cells
+schwann.DHT.response <- FindMarkers(pancreas.integrated, 
+                                 ident.1 = "Schwann_DHT[10nM]", ident.2 = "Schwann_EtOH", 
+                                 test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                 min.pct = 0.1,
+                                 logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                 pseudocount.use = 1,
+                                 verbose = TRUE)
+head(schwann.DHT.response, n = 15)
+write.csv(schwann.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\schwann.DHT.response.csv)")
+
+# 17.Endothelial-Cells
+endothelial.DHT.response <- FindMarkers(pancreas.integrated, 
+                                 ident.1 = "Endothelial_DHT[10nM]", ident.2 = "Endothelial_EtOH", 
+                                 test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                 min.pct = 0.1,
+                                 logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                 pseudocount.use = 1,
+                                 verbose = TRUE)
+head(endothelial.DHT.response, n = 15)
+write.csv(endothelial.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\endothelial.DHT.response.csv)")
+
+#
+#
+# Running DE for all genes irrlevant of FC and PCT filtering
+# 1.Beta-cells
+
 
 # Plotting DE genes
 Idents(pancreas.integrated) <- "celltype"
