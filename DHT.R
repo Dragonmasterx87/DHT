@@ -1,21 +1,23 @@
 # LOAD LIBRARIES ####
 # Restart Rstudio or R
 # Run the following code once you have Seurat installed
-suppressWarnings({
-  library(ggplot2)
-  library(cowplot)
-  library(Matrix)
-  library(ggridges)
-  library(ggrepel)
-  library(dplyr)
-  library(Seurat)
-  library(monocle3)
-  library(plotly)
-  library(clustree)
-  library(patchwork)
-  library(future)
-  library(DoubletFinder)
-  }
+suppressWarnings(
+  {
+    library(ggplot2)
+    library(cowplot)
+    library(Matrix)
+    library(ggridges)
+    library(ggrepel)
+    library(dplyr)
+    library(Seurat)
+    library(monocle3)
+    library(plotly)
+    library(clustree)
+    library(patchwork)
+    library(future)
+    library(DoubletFinder)
+    library(EnhancedVolcano)
+    }
   )
 
 # CONFIRM CORRECT INSTALL ####
@@ -247,7 +249,24 @@ pancreas.integrated@meta.data$celltype <- factor(x = pancreas.integrated@meta.da
 Idents(pancreas.integrated) <- "celltype"
 
 # Observing cells
-DimPlot(pancreas.integrated, split.by = "sample", group.by = "celltype", label = FALSE, ncol = 2)
+DimPlot(pancreas.integrated, split.by = "sample", group.by = "celltype", label = FALSE, ncol = 2,  cols = c("red",
+                                                                                                            "red4",
+                                                                                                            "orange",
+                                                                                                            "lightgoldenrod3",
+                                                                                                            "sienna",
+                                                                                                            "indianred",
+                                                                                                            "orangered1",
+                                                                                                            "darkturquoise",
+                                                                                                            "paleturquoise",
+                                                                                                            "lightgreen",
+                                                                                                            "springgreen4",
+                                                                                                            "darkolivegreen",
+                                                                                                            "purple4",
+                                                                                                            "purple",
+                                                                                                            "deeppink",
+                                                                                                            "violetred",
+                                                                                                            "violet"
+))
 DimPlot(pancreas.integrated, group.by = "treatment")
 UMAPPlot(pancreas.integrated, reduction = "umap",
         pt.size = .75,
@@ -341,7 +360,7 @@ pancreas.integrated.markers <- FindAllMarkers(object = pancreas.integrated,
                                                   only.pos = TRUE, 
                                                   min.pct = 0.1, 
                                                   logfc.threshold = 0.137504, 
-                                                  assay = 'SCT',
+                                                  assay = 'RNA',
                                                   slot = c('data'))
 
 pancreas.integrated.markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_log2FC)
@@ -823,6 +842,70 @@ plots <- VlnPlot(beta.cells, features = c("INS", "DDIT3", "MIF", "DEPP1", "PLCG2
 plots <- VlnPlot(beta.cells, features = c("MT-CO3", "MT-ND1", "MT-ND4", "MT-ATP6", "MT-CO1", "MT-CYB"), group.by = "treatment", 
                  pt.size = 1, combine = TRUE)
 wrap_plots(plots = plots, nrow = 1, ncol = 1)
+
+# Load data
+beta.INSHi.DHT.response <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\With split of Hi and Low\ALL\beta.INSLow.DHT.response.csv)",
+                                    header = TRUE, sep = ",", row.names = 1)
+volcanodat <- beta.INSHi.DHT.response
+volcanodat
+
+# create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change
+# set the base colour as 'black'
+keyvals <- rep('black', nrow(volcanodat))
+
+# set the base name/label as 'Mid'
+names(keyvals) <- rep('Mid', nrow(volcanodat))
+
+# modify keyvals for variables with fold change > 1.1
+keyvals[which(volcanodat$avg_log2FC > 0.137504 & volcanodat$p_val < 0.05)] <- 'red'
+names(keyvals)[which(volcanodat$avg_log2FC > 0.137504 & volcanodat$p_val < 0.05)] <- 'high'
+
+# modify keyvals for variables with fold change < -1.1
+keyvals[which(volcanodat$avg_log2FC < -0.137504 & volcanodat$p_val < 0.05)] <- 'royalblue'
+names(keyvals)[which(volcanodat$avg_log2FC < -0.137504 & volcanodat$p_val < 0.05)] <- 'low'
+
+unique(names(keyvals))
+
+unique(keyvals)
+keyvals[1:20]
+
+EnhancedVolcano(volcanodat,
+                lab = rownames(volcanodat),
+                x = 'avg_log2FC',
+                y = 'p_val',
+                #selectLab = FALSE,
+                #selectLab = rownames(volcanodat)[which(names(keyvals) %in% c('high', 'low'))],
+                selectLab = c(''),
+                #boxedLabels = TRUE,
+                xlim = c(-1.5,1.5),
+                ylim = c(0,50),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                title = 'Custom colour over-ride',
+                pCutoff = 0.05,
+                FCcutoff = 0.137504,
+                #pointSize = c(ifelse(volcanodat$avg_log2FC < -1 | volcanodat$avg_log2FC > 1, 6, 4)),
+                pointSize = 5,
+                labSize = 6,
+                labFace = 'bold',
+                #boxedLabels = TRUE,
+                labCol = 'black',
+                shape = c(20, 20, 20, 20),
+                colCustom = keyvals,
+                colAlpha = 4/5,
+                legendPosition = 'right',
+                legendLabSize = 15,
+                legendIconSize = 5.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1,
+                colConnectors = 'black',
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                border = 'partial',
+                borderWidth = 1.5,
+                borderColour = 'black') + theme(axis.text.x = element_text(colour = "black"),
+                                                axis.text.y = element_text(colour = "black"),
+                                                axis.title.x = element_text(colour = "black"),
+                                                axis.title.y = element_text(colour = "black"))
 
 
 # Calculating percentages
