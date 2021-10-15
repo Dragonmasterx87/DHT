@@ -189,19 +189,55 @@ Idents(pancreas.integrated) <- "sex"
 Idents(pancreas.integrated) <- "sample"
 Idents(pancreas.integrated) <- "seurat_clusters"
 #Idents(pancreas.integrated) <- "integrated_snn_res.0.3"
-DimPlot(pancreas.integrated, reduction = "umap", label = TRUE)
+DimPlot(pancreas.integrated, reduction = "umap", label = FALSE)
 
 #Visualize gene expression
 DefaultAssay(object = pancreas.integrated) <- "RNA"
 DefaultAssay(object = pancreas.integrated)
 FeaturePlot(object = pancreas.integrated,
-            features = c("AR"),
+            features = c("INS", "GCG", "SST", "PPY", "GHRL",
+                         "KRT19", "CPA1",
+                         "COL1A1", "VWF", "SOX10",
+                         "TPSAB1", "SDS", "TRAC"),
             pt.size = 1,
             cols = c("darkgrey", "red"),
             #min.cutoff = 0,
-            max.cutoff = 1,
+            #max.cutoff = 1,
             slot = 'counts',
             order = TRUE)
+
+FeaturePlot(object = pancreas.integrated,
+            features = c("GHRL"),
+            pt.size = 1,
+            cols = c("darkgrey", "red"),
+            #min.cutoff = 0,
+            max.cutoff = 2,
+            slot = 'counts',
+            order = TRUE)
+
+
+VlnPlot(
+  pancreas.integrated,
+  features = c("GHRL"),
+  cols = NULL,
+  pt.size = NULL,
+  idents = NULL,
+  sort = FALSE,
+  assay = NULL,
+  group.by = NULL,
+  split.by = NULL,
+  adjust = 1,
+  y.max = NULL,
+  same.y.lims = FALSE,
+  log = FALSE,
+  ncol = 1,
+  slot = "data",
+  split.plot = FALSE,
+  stack = FALSE,
+  combine = TRUE,
+  fill.by = "feature",
+  flip = FALSE
+)
 
 #Rename Idents
 pancreas.integrated <- RenameIdents(pancreas.integrated, 
@@ -228,6 +264,9 @@ pancreas.integrated <- RenameIdents(pancreas.integrated,
                                     "20" = "T-Lymphocyte"
                                     )
 
+plot <- DimPlot(pancreas.integrated, reduction = "umap")
+pancreas.integrated <- CellSelector(plot = plot, object = pancreas.integrated, ident = "Epsilon")
+
 DimPlot(pancreas.integrated, reduction = "umap", label = TRUE)
 
 # Saving this information in the metadata slot
@@ -237,7 +276,7 @@ head(pancreas.integrated@meta.data)
 
 # Define an order of cluster identities remember after this step-
 # cluster re-assignment occurs, which re-assigns clustering in my_levels
-my_levels <- c("Beta INS-hi", "Beta INS-low", "Alpha GCG-hi", "Alpha GCG-low", "Transdifferentiating Beta", "Delta", "Gamma", 
+my_levels <- c("Beta INS-hi", "Beta INS-low", "Alpha GCG-hi", "Alpha GCG-low", "Transdifferentiating Beta", "Delta", "Gamma", "Epsilon",
                "Ductal", "Acinar", 
                "Quiescent Stellate", "Activated Stellate", "Proliferating Stellate",
                "Macrophage", "T-Lymphocyte", "Mast",
@@ -256,6 +295,7 @@ DimPlot(pancreas.integrated, split.by = "sample", group.by = "celltype", label =
                                                                                                             "sienna",
                                                                                                             "indianred",
                                                                                                             "orangered1",
+                                                                                                            "hotpink",
                                                                                                             "darkturquoise",
                                                                                                             "paleturquoise",
                                                                                                             "lightgreen",
@@ -277,6 +317,7 @@ UMAPPlot(pancreas.integrated, reduction = "umap",
                  "sienna",
                  "indianred",
                  "orangered1",
+                 "hotpink",
                  "darkturquoise",
                  "paleturquoise",
                  "lightgreen",
@@ -316,6 +357,9 @@ head(markers.delta)
 
 markers.gamma <- FindConservedMarkers(pancreas.integrated, ident.1 = "Gamma", grouping.var = "treatment", verbose = TRUE)
 head(markers.gamma)
+
+markers.epsilon <- FindConservedMarkers(pancreas.integrated, ident.1 = "Epsilon", grouping.var = "treatment", verbose = TRUE)
+head(markers.epsilon)
 
 markers.ductal <- FindConservedMarkers(pancreas.integrated, ident.1 = "Ductal", grouping.var = "treatment", verbose = TRUE)
 head(markers.ductal)
@@ -383,12 +427,12 @@ DoHeatmap(object = pancreas.integrated,
                                                                             "#fbfcbd", 
                                                                             "#ff0000"))(256))
 # Identify conserved cell markers
-Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("Beta INS-hi", "Beta INS-low", "Alpha GCG-hi", "Alpha GCG-low", "Transdifferentiating Beta", "Delta", "Gamma", 
+Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("Beta INS-hi", "Beta INS-low", "Alpha GCG-hi", "Alpha GCG-low", "Transdifferentiating Beta", "Delta", "Gamma", "Epsilon",
                                                                               "Ductal", "Acinar", 
                                                                               "Quiescent Stellate", "Activated Stellate", "Proliferating Stellate", 
                                                                               "Macrophage", "T-Lymphocyte", "Mast", "Schwann", "Endothelial"))
 markers.to.plot <- c("INS", "IAPP", "NKX6-1", "MAFA", "MAFB", "GCG", "DPP4", "GC", "LEPR", "SST", "FRZB", "PPY", "CALB1", "THSD7A",
-                     "CFTR", "KRT19", "MMP7", "CELA2A", "CELA2B", "CELA3A", "COL3A1", "FMOD", "PDGFRB", "MKI67", "HIST1H4C", "STMN1", 
+                     "CFTR", "KRT19", "MMP7", "CELA2A", "CELA2B", "CELA3A", "RGS5", "CSRP2", "FABP4", "COL3A1", "FMOD", "PDGFRB", "MKI67", "HIST1H4C", "STMN1", 
                      "CD86", "CSF1R", "SDS", "NKG7", "IL2RB", "CCL5", "RGS13", "TPSB2", "TPSAB1", "SOX10", "CDH19", "NGFR", "CD34", "ENG", "VWF")
 
 # Advanced coding for ggplot2
@@ -398,7 +442,7 @@ pancreas.integrated$celltype.sample <- paste(Idents(pancreas.integrated),pancrea
 table(pancreas.integrated@meta.data$celltype.sample)
 
 # New metadata column is not paired, so we need to pair
-my_levels2 <- c("Beta INS-hi_EtOH", "Beta INS-hi_DHT[10nM]", "Beta INS-low_EtOH", "Beta INS-low_DHT[10nM]", "Transdifferentiating Beta_EtOH", "Transdifferentiating Beta_DHT[10nM]", "Alpha GCG-hi_EtOH", "Alpha GCG-hi_DHT[10nM]", "Alpha GCG-low_EtOH", "Alpha GCG-low_DHT[10nM]", "Delta_EtOH", "Delta_DHT[10nM]", "Gamma_EtOH", "Gamma_DHT[10nM]", 
+my_levels2 <- c("Beta INS-hi_EtOH", "Beta INS-hi_DHT[10nM]", "Beta INS-low_EtOH", "Beta INS-low_DHT[10nM]", "Transdifferentiating Beta_EtOH", "Transdifferentiating Beta_DHT[10nM]", "Alpha GCG-hi_EtOH", "Alpha GCG-hi_DHT[10nM]", "Alpha GCG-low_EtOH", "Alpha GCG-low_DHT[10nM]", "Delta_EtOH", "Delta_DHT[10nM]", "Gamma_EtOH", "Gamma_DHT[10nM]", "Epsilon_EtOH", "Epsilon_DHT[10nM]",
                 "Ductal_EtOH", "Ductal_DHT[10nM]", "Acinar_EtOH", "Acinar_DHT[10nM]", 
                 "Quiescent Stellate_EtOH", "Quiescent Stellate_DHT[10nM]", "Activated Stellate_EtOH", "Activated Stellate_DHT[10nM]", "Proliferating Stellate_EtOH", "Proliferating Stellate_DHT[10nM]",
                 "Macrophage_EtOH", "Macrophage_DHT[10nM]", "T-Lymphocyte_EtOH", "T-Lymphocyte_DHT[10nM]", "Mast_EtOH", "Mast_DHT[10nM]", "Schwann_EtOH", "Schwann_DHT[10nM]", "Endothelial_EtOH", "Endothelial_DHT[10nM]")
@@ -844,9 +888,8 @@ plots <- VlnPlot(beta.cells, features = c("MT-CO3", "MT-ND1", "MT-ND4", "MT-ATP6
 wrap_plots(plots = plots, nrow = 1, ncol = 1)
 
 # Load data
-beta.INSHi.DHT.response <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\With split of Hi and Low\ALL\beta.INSLow.DHT.response.csv)",
+volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\With split of Hi and Low\ALL\delta.DHT.response.csv)",
                                     header = TRUE, sep = ",", row.names = 1)
-volcanodat <- beta.INSHi.DHT.response
 volcanodat
 
 # create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change
@@ -877,8 +920,8 @@ EnhancedVolcano(volcanodat,
                 #selectLab = rownames(volcanodat)[which(names(keyvals) %in% c('high', 'low'))],
                 selectLab = c(''),
                 #boxedLabels = TRUE,
-                xlim = c(-1.5,1.5),
-                ylim = c(0,50),
+                xlim = c(-2,2),
+                ylim = c(0,20),
                 xlab = bquote(~Log[2]~ 'fold change'),
                 title = 'Custom colour over-ride',
                 pCutoff = 0.05,
