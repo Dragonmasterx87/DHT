@@ -211,32 +211,36 @@ FeaturePlot(object = pancreas.integrated,
             pt.size = 1,
             cols = c("darkgrey", "red"),
             #min.cutoff = 0,
-            max.cutoff = 2,
+            max.cutoff = 200,
             slot = 'counts',
             order = TRUE)
 
 
 VlnPlot(
-  pancreas.integrated,
+  object = pancreas.integrated,
   features = c("GHRL"),
-  cols = NULL,
-  pt.size = NULL,
-  idents = NULL,
-  sort = FALSE,
-  assay = NULL,
-  group.by = NULL,
-  split.by = NULL,
-  adjust = 1,
-  y.max = NULL,
-  same.y.lims = FALSE,
-  log = FALSE,
-  ncol = 1,
-  slot = "data",
-  split.plot = FALSE,
-  stack = FALSE,
-  combine = TRUE,
-  fill.by = "feature",
-  flip = FALSE
+  assay = 'RNA',
+  slot = 'counts',
+  cols = c('red',
+           'red4',
+           'orange',
+           'lightgoldenrod3',
+           'sienna',
+           'indianred',
+           'orangered1',
+           'black',
+           'darkturquoise',
+           'paleturquoise',
+           'lightgreen',
+           'springgreen4',
+           'darkolivegreen',
+           'purple4',
+           'purple',
+           'deeppink',
+           'violetred',
+           'violet'),
+  #y.max = 3,
+  pt.size = 0
 )
 
 #Rename Idents
@@ -264,8 +268,10 @@ pancreas.integrated <- RenameIdents(pancreas.integrated,
                                     "20" = "T-Lymphocyte"
                                     )
 
-plot <- DimPlot(pancreas.integrated, reduction = "umap")
-pancreas.integrated <- CellSelector(plot = plot, object = pancreas.integrated, ident = "Epsilon")
+#plot <- DimPlot(pancreas.integrated, reduction = "umap")
+DefaultAssay(object = pancreas.integrated) <- "RNA"
+Idents(pancreas.integrated, WhichCells(object = pancreas.integrated, expression = GHRL > 1, slot = 'counts')) <- 'Epsilon'
+#pancreas.integrated <- CellSelector(plot = plot, object = pancreas.integrated, ident = "Epsilon")
 
 DimPlot(pancreas.integrated, reduction = "umap", label = TRUE)
 
@@ -295,7 +301,7 @@ DimPlot(pancreas.integrated, split.by = "sample", group.by = "celltype", label =
                                                                                                             "sienna",
                                                                                                             "indianred",
                                                                                                             "orangered1",
-                                                                                                            "hotpink",
+                                                                                                            "black",
                                                                                                             "darkturquoise",
                                                                                                             "paleturquoise",
                                                                                                             "lightgreen",
@@ -317,7 +323,7 @@ UMAPPlot(pancreas.integrated, reduction = "umap",
                  "sienna",
                  "indianred",
                  "orangered1",
-                 "hotpink",
+                 "black",
                  "darkturquoise",
                  "paleturquoise",
                  "lightgreen",
@@ -332,7 +338,7 @@ UMAPPlot(pancreas.integrated, reduction = "umap",
                  label = FALSE)
 
 # Save file this will change but for showing them on 07132021 its fine
-#saveRDS(pancreas.integrated, file = r"(C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds)")
+saveRDS(pancreas.integrated, file = r"(C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds)")
 #pancreas.integrated <- readRDS(r"(C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds)")
 
 # Identify conserved cell markers
@@ -399,6 +405,7 @@ pancreas.integrated <- SCTransform(pancreas.integrated, assay = "RNA", new.assay
 # Fold Change of >1.1x
 # Atleast 10% of cells express that gene
 Idents(object = pancreas.integrated) <- "celltype"
+DefaultAssay(object = pancreas.integrated) <- "RNA"
 pancreas.integrated.markers <- FindAllMarkers(object = pancreas.integrated, 
                                                   features = VariableFeatures(pancreas.integrated, assay = 'integrated'), 
                                                   only.pos = TRUE, 
@@ -408,7 +415,7 @@ pancreas.integrated.markers <- FindAllMarkers(object = pancreas.integrated,
                                                   slot = c('data'))
 
 pancreas.integrated.markers %>% group_by(cluster) %>% top_n(n = 2, wt = avg_log2FC)
-write.csv(pancreas.integrated.markers, r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\pancreas.integrated.markers.SCT.csv)")
+write.csv(pancreas.integrated.markers, r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\pancreas.integrated.markers.RNA.csv)")
 
 # Look at your default assay
 DefaultAssay(object = pancreas.integrated)
@@ -431,7 +438,7 @@ Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("B
                                                                               "Ductal", "Acinar", 
                                                                               "Quiescent Stellate", "Activated Stellate", "Proliferating Stellate", 
                                                                               "Macrophage", "T-Lymphocyte", "Mast", "Schwann", "Endothelial"))
-markers.to.plot <- c("INS", "IAPP", "NKX6-1", "MAFA", "MAFB", "GCG", "DPP4", "GC", "LEPR", "SST", "FRZB", "PPY", "CALB1", "THSD7A",
+markers.to.plot <- c("INS", "IAPP", "NKX6-1", "MAFA", "MAFB", "GCG", "DPP4", "GC", "LEPR", "SST", "FRZB", "PPY", "CALB1", "THSD7A", "GHRL", "PHGR1",
                      "CFTR", "KRT19", "MMP7", "CELA2A", "CELA2B", "CELA3A", "RGS5", "CSRP2", "FABP4", "COL3A1", "FMOD", "PDGFRB", "MKI67", "HIST1H4C", "STMN1", 
                      "CD86", "CSF1R", "SDS", "NKG7", "IL2RB", "CCL5", "RGS13", "TPSB2", "TPSAB1", "SOX10", "CDH19", "NGFR", "CD34", "ENG", "VWF")
 
@@ -571,6 +578,17 @@ gamma.DHT.response <- FindMarkers(pancreas.integrated,
 head(gamma.DHT.response, n = 15)
 write.csv(gamma.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\gamma.DHT.response.csv)")
 
+# 7.Epsilon-Cells
+epsilon.DHT.response <- FindMarkers(pancreas.integrated, 
+                                  ident.1 = "Epsilon_DHT[10nM]", ident.2 = "Epsilon_EtOH", 
+                                  test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                  min.pct = 0.1,
+                                  logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                  pseudocount.use = 1,
+                                  verbose = TRUE)
+head(epsilon.DHT.response, n = 15)
+write.csv(epsilon.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\epsilon.DHT.response.csv)")
+
 # 8.Ductal-Cells
 ductal.DHT.response <- FindMarkers(pancreas.integrated, 
                                   ident.1 = "Ductal_DHT[10nM]", ident.2 = "Ductal_EtOH", 
@@ -700,7 +718,7 @@ beta.INSHi.DHT.response <- FindMarkers(pancreas.integrated,
                                        pseudocount.use = 1,
                                        verbose = TRUE)
 head(beta.INSHi.DHT.response, n = 15)
-write.csv(beta.INSHi.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\beta.INSHi.DHT.response.csv)")
+write.csv(beta.INSHi.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1beta.INSHi.DHT.response.csv)")
 
 # 2.Beta-cells (INS low)
 beta.INSLow.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -711,7 +729,7 @@ beta.INSLow.DHT.response <- FindMarkers(pancreas.integrated,
                                         pseudocount.use = 1,
                                         verbose = TRUE)
 head(beta.INSLow.DHT.response, n = 15)
-write.csv(beta.INSLow.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\beta.INSLow.DHT.response.csv)")
+write.csv(beta.INSLow.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1beta.INSLow.DHT.response.csv)")
 
 # 3.Alpha-cells (GCG hi)
 alpha.GCGHi.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -722,7 +740,7 @@ alpha.GCGHi.DHT.response <- FindMarkers(pancreas.integrated,
                                         pseudocount.use = 1,
                                         verbose = TRUE)
 head(alpha.GCGHi.DHT.response, n = 15)
-write.csv(alpha.GCGHi.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\alpha.GCGHi.DHT.response.csv)")
+write.csv(alpha.GCGHi.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1alpha.GCGHi.DHT.response.csv)")
 
 # 4.Alpha-cells (GCG low)
 alpha.GCGLow.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -733,7 +751,7 @@ alpha.GCGLow.DHT.response <- FindMarkers(pancreas.integrated,
                                          pseudocount.use = 1,
                                          verbose = TRUE)
 head(alpha.GCGLow.DHT.response, n = 15)
-write.csv(alpha.GCGLow.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\alpha.GCGLow.DHT.response.csv)")
+write.csv(alpha.GCGLow.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1alpha.GCGLow.DHT.response.csv)")
 
 # 5.Trandifferentiating Endocrine-Cells
 tranbeta.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -744,7 +762,7 @@ tranbeta.DHT.response <- FindMarkers(pancreas.integrated,
                                      pseudocount.use = 1,
                                      verbose = TRUE)
 head(tranbeta.DHT.response, n = 15)
-write.csv(tranbeta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\tranbeta.DHT.response.csv)")
+write.csv(tranbeta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1tranbeta.DHT.response.csv)")
 
 # 6.Delta-Cells
 delta.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -755,7 +773,7 @@ delta.DHT.response <- FindMarkers(pancreas.integrated,
                                   pseudocount.use = 1,
                                   verbose = TRUE)
 head(delta.DHT.response, n = 15)
-write.csv(delta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\delta.DHT.response.csv)")
+write.csv(delta.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1delta.DHT.response.csv)")
 
 # 7.Gamma-Cells
 gamma.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -766,7 +784,18 @@ gamma.DHT.response <- FindMarkers(pancreas.integrated,
                                   pseudocount.use = 1,
                                   verbose = TRUE)
 head(gamma.DHT.response, n = 15)
-write.csv(gamma.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\gamma.DHT.response.csv)")
+write.csv(gamma.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1gamma.DHT.response.csv)")
+
+# 7.Epsilon-Cells
+epsilon.DHT.response <- FindMarkers(pancreas.integrated, 
+                                    ident.1 = "Epsilon_DHT[10nM]", ident.2 = "Epsilon_EtOH", 
+                                    test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
+                                    min.pct = 0.1,
+                                    logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                    pseudocount.use = 1,
+                                    verbose = TRUE)
+head(epsilon.DHT.response, n = 15)
+write.csv(epsilon.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1epsilon.DHT.response.csv)")
 
 # 8.Ductal-Cells
 ductal.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -777,7 +806,7 @@ ductal.DHT.response <- FindMarkers(pancreas.integrated,
                                    pseudocount.use = 1,
                                    verbose = TRUE)
 head(ductal.DHT.response, n = 15)
-write.csv(ductal.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\ductal.DHT.response.csv)")
+write.csv(ductal.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1ductal.DHT.response.csv)")
 
 # 9.Acinar-Cells
 acinar.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -788,7 +817,7 @@ acinar.DHT.response <- FindMarkers(pancreas.integrated,
                                    pseudocount.use = 1,
                                    verbose = TRUE)
 head(acinar.DHT.response, n = 15)
-write.csv(acinar.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\acinar.DHT.response.csv)")
+write.csv(acinar.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1acinar.DHT.response.csv)")
 
 # 10.Quiescent Stellate-Cells
 qstellate.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -799,7 +828,7 @@ qstellate.DHT.response <- FindMarkers(pancreas.integrated,
                                       pseudocount.use = 1,
                                       verbose = TRUE)
 head(qstellate.DHT.response, n = 15)
-write.csv(qstellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\qstellate.DHT.response.csv)")
+write.csv(qstellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1qstellate.DHT.response.csv)")
 
 # 11.Activated Stellate-Cells
 astellate.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -810,7 +839,7 @@ astellate.DHT.response <- FindMarkers(pancreas.integrated,
                                       pseudocount.use = 1,
                                       verbose = TRUE)
 head(astellate.DHT.response, n = 15)
-write.csv(astellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\astellate.DHT.response.csv)")
+write.csv(astellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1astellate.DHT.response.csv)")
 
 # 12.Proliferating Stellate-Cells
 pstellate.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -821,7 +850,7 @@ pstellate.DHT.response <- FindMarkers(pancreas.integrated,
                                       pseudocount.use = 1,
                                       verbose = TRUE)
 head(pstellate.DHT.response, n = 15)
-write.csv(pstellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\pstellate.DHT.response.csv)")
+write.csv(pstellate.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1pstellate.DHT.response.csv)")
 
 # 13.Macrophage-Cells
 macrophage.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -832,7 +861,7 @@ macrophage.DHT.response <- FindMarkers(pancreas.integrated,
                                        pseudocount.use = 1,
                                        verbose = TRUE)
 head(macrophage.DHT.response, n = 15)
-write.csv(macrophage.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\macrophage.DHT.response.csv)")
+write.csv(macrophage.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1macrophage.DHT.response.csv)")
 
 # 14.T Lymphocyte-Cells
 tlympho.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -843,7 +872,7 @@ tlympho.DHT.response <- FindMarkers(pancreas.integrated,
                                     pseudocount.use = 1,
                                     verbose = TRUE)
 head(tlympho.DHT.response, n = 15)
-write.csv(tlympho.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\tlympho.DHT.response.csv)")
+write.csv(tlympho.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1tlympho.DHT.response.csv)")
 
 # 15.Mast-Cells
 mast.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -854,7 +883,7 @@ mast.DHT.response <- FindMarkers(pancreas.integrated,
                                  pseudocount.use = 1,
                                  verbose = TRUE)
 head(mast.DHT.response, n = 15)
-write.csv(mast.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\mast.DHT.response.csv)")
+write.csv(mast.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1mast.DHT.response.csv)")
 
 # 16.Schwann-Cells
 schwann.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -865,7 +894,7 @@ schwann.DHT.response <- FindMarkers(pancreas.integrated,
                                     pseudocount.use = 1,
                                     verbose = TRUE)
 head(schwann.DHT.response, n = 15)
-write.csv(schwann.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\schwann.DHT.response.csv)")
+write.csv(schwann.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1schwann.DHT.response.csv)")
 
 # 17.Endothelial-Cells
 endothelial.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -876,19 +905,19 @@ endothelial.DHT.response <- FindMarkers(pancreas.integrated,
                                         pseudocount.use = 1,
                                         verbose = TRUE)
 head(endothelial.DHT.response, n = 15)
-write.csv(endothelial.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\endothelial.DHT.response.csv)")
+write.csv(endothelial.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1endothelial.DHT.response.csv)")
 
 # Plotting DE genes
 Idents(pancreas.integrated) <- "celltype"
-beta.cells <- subset(pancreas.integrated, idents = "Beta")
+beta.cells <- subset(pancreas.integrated, idents = "Beta INS-hi")
 plots <- VlnPlot(beta.cells, features = c("INS", "DDIT3", "MIF", "DEPP1", "PLCG2", "IAPP"), group.by = "treatment", 
-                 pt.size = 1, combine = TRUE)
+                 pt.size = 0, combine = TRUE)
 plots <- VlnPlot(beta.cells, features = c("MT-CO3", "MT-ND1", "MT-ND4", "MT-ATP6", "MT-CO1", "MT-CYB"), group.by = "treatment", 
-                 pt.size = 1, combine = TRUE)
+                 pt.size = 0, combine = TRUE)
 wrap_plots(plots = plots, nrow = 1, ncol = 1)
 
 # Load data
-volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\With split of Hi and Low\ALL\delta.DHT.response.csv)",
+volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\All Genes\1epsilon.DHT.response.csv)",
                                     header = TRUE, sep = ",", row.names = 1)
 volcanodat
 
@@ -921,7 +950,7 @@ EnhancedVolcano(volcanodat,
                 selectLab = c(''),
                 #boxedLabels = TRUE,
                 xlim = c(-2,2),
-                ylim = c(0,20),
+                ylim = c(1,4),
                 xlab = bquote(~Log[2]~ 'fold change'),
                 title = 'Custom colour over-ride',
                 pCutoff = 0.05,
