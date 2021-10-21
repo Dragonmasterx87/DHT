@@ -790,12 +790,12 @@ write.csv(gamma.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT 
 epsilon.DHT.response <- FindMarkers(pancreas.integrated, 
                                     ident.1 = "Epsilon_DHT[10nM]", ident.2 = "Epsilon_EtOH", 
                                     test.use = "wilcox", # Based on #2938 DESeq2 not recommended for single cell gene expression analysis
-                                    min.pct = 0.1,
-                                    logfc.threshold = 0.137504, # based on output log2 so 0.137504 is ~1.1 FC
+                                    min.pct = 0,
+                                    logfc.threshold = 0, # based on output log2 so 0.137504 is ~1.1 FC
                                     pseudocount.use = 1,
                                     verbose = TRUE)
 head(epsilon.DHT.response, n = 15)
-write.csv(epsilon.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1epsilon.DHT.response.csv)")
+write.csv(epsilon.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\epsilon.DHT.response.csv)")
 
 # 8.Ductal-Cells
 ductal.DHT.response <- FindMarkers(pancreas.integrated, 
@@ -917,9 +917,9 @@ plots <- VlnPlot(beta.cells, features = c("MT-CO3", "MT-ND1", "MT-ND4", "MT-ATP6
 wrap_plots(plots = plots, nrow = 1, ncol = 1)
 
 # Load data
-volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\All Genes\1epsilon.DHT.response.csv)",
+volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\All Genes\epsilon.DHT.response.csv)",
                                     header = TRUE, sep = ",", row.names = 1)
-volcanodat
+volcanodat <- epsilon.DHT.response
 
 # create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change
 # set the base colour as 'black'
@@ -950,7 +950,7 @@ EnhancedVolcano(volcanodat,
                 selectLab = c(''),
                 #boxedLabels = TRUE,
                 xlim = c(-2,2),
-                ylim = c(1,4),
+                ylim = c(0,4),
                 xlab = bquote(~Log[2]~ 'fold change'),
                 title = 'Custom colour over-ride',
                 pCutoff = 0.05,
