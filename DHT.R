@@ -207,7 +207,7 @@ FeaturePlot(object = pancreas.integrated,
             order = TRUE)
 
 FeaturePlot(object = pancreas.integrated,
-            features = c("GHRL"),
+            features = c("ADCY10"),
             pt.size = 1,
             cols = c("darkgrey", "red"),
             #min.cutoff = 0,
@@ -218,7 +218,7 @@ FeaturePlot(object = pancreas.integrated,
 
 VlnPlot(
   object = pancreas.integrated,
-  features = c("GHRL"),
+  features = c("AR"),
   assay = 'RNA',
   slot = 'counts',
   cols = c('red',
@@ -240,7 +240,7 @@ VlnPlot(
            'violetred',
            'violet'),
   #y.max = 3,
-  pt.size = 0
+  pt.size = 1
 )
 
 #Rename Idents
