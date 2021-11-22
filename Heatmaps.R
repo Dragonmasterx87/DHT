@@ -64,6 +64,9 @@ MS.heatmap <- read.csv(r"(C:\Users\mqadir\Box\Lab 2301\Coding Scripts\Mass Spec\
 MS.heatmap <- read.csv(r"(C:\Users\mqadir\Box\Lab 2301\Coding Scripts\Mass Spec\mass_spec_actual_DHT_GLP1.csv)", header = TRUE, sep = ",", row.names = 1)
 MS.heatmap <- read.csv(r"(C:\Users\mqadir\Box\Lab 2301\Coding Scripts\Mass Spec\mass_spec_actual_Negatively_corelated.csv)", header = TRUE, sep = ",", row.names = 1)
 
+# For RPPA
+MS.heatmap <- read.csv(r"(C:\Users\mqadir\Box\Lab 2301\Coding Scripts\Mass Spec\Selected total proteins_for heatmap.csv)", header = TRUE, sep = ",", row.names = 1)
+
 # DATA ANALYSIS: HEATMAPS ####
 # Hierarchical clustering with heatmaps
 ## Get some nicer colours
