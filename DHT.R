@@ -185,6 +185,10 @@ pancreas.integrated <- RunUMAP(pancreas.integrated, dims = 1:30)
 
 # Change default assay to integrated, to view dimensionality
 Idents(pancreas.integrated) <- "treatment"
+DimPlot(pancreas.integrated, reduction = "umap", 
+        cols = c('black', 'red'), 
+        label = FALSE,
+        order = FALSE)
 Idents(pancreas.integrated) <- "sex"
 Idents(pancreas.integrated) <- "sample"
 Idents(pancreas.integrated) <- "seurat_clusters"
@@ -207,7 +211,7 @@ FeaturePlot(object = pancreas.integrated,
             order = TRUE)
 
 FeaturePlot(object = pancreas.integrated,
-            features = c("ADCY10"),
+            features = c("GHRL"),
             pt.size = 1,
             cols = c("darkgrey", "red"),
             #min.cutoff = 0,
