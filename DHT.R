@@ -211,11 +211,11 @@ FeaturePlot(object = pancreas.integrated,
             order = TRUE)
 
 FeaturePlot(object = pancreas.integrated,
-            features = c("GHRL"),
+            features = c("AR"),
             pt.size = 1,
             cols = c("darkgrey", "red"),
             #min.cutoff = 0,
-            max.cutoff = 200,
+            max.cutoff = 2,
             slot = 'counts',
             order = TRUE)
 
@@ -286,7 +286,7 @@ head(pancreas.integrated@meta.data)
 
 # Define an order of cluster identities remember after this step-
 # cluster re-assignment occurs, which re-assigns clustering in my_levels
-my_levels <- c("Beta INS-hi", "Beta INS-low", "Alpha GCG-hi", "Alpha GCG-low", "Transdifferentiating Beta", "Delta", "Gamma", "Epsilon",
+my_levels <- c("Beta INS-hi", "Beta INS-low", "Transdifferentiating Beta", "Alpha GCG-hi", "Alpha GCG-low", "Delta", "Gamma", "Epsilon",
                "Ductal", "Acinar", 
                "Quiescent Stellate", "Activated Stellate", "Proliferating Stellate",
                "Macrophage", "T-Lymphocyte", "Mast",
@@ -340,9 +340,69 @@ UMAPPlot(pancreas.integrated, reduction = "umap",
                  "violet"
                  ),
                  label = FALSE)
+#beta.hi <- subset(pancreas.integrated, idents = "Beta INS-hi")
+
+#table(beta.hi$treatment)
+
+DotPlot(pancreas.integrated,
+        group.by = "treatment",
+        #split.by = "treatment",
+        features = c("INS", "GCG"), 
+        cols = c("yellow", "red"), 
+        col.min = -10, 
+        col.max = 10)
+
+# Advanced coding for ggplot2
+# Create a new metadata slot containing combined info, segregating clusters and samples
+Idents(object = pancreas.integrated) <- "celltype"
+
+# Select only beta cells
+beta.hi <- subset(pancreas.integrated, idents = "Beta INS-hi")
+
+pancreas.integrated$celltype.sample <- paste(Idents(pancreas.integrated),pancreas.integrated$treatment, sep = "_")
+table(pancreas.integrated@meta.data$celltype.sample)
+
+# New metadata column is not paired, so we need to pair
+my_levels2 <- c("Beta INS-hi_EtOH", "Beta INS-hi_DHT[10nM]", "Beta INS-low_EtOH", "Beta INS-low_DHT[10nM]", "Transdifferentiating Beta_EtOH", "Transdifferentiating Beta_DHT[10nM]", "Alpha GCG-hi_EtOH", "Alpha GCG-hi_DHT[10nM]", "Alpha GCG-low_EtOH", "Alpha GCG-low_DHT[10nM]", "Delta_EtOH", "Delta_DHT[10nM]", "Gamma_EtOH", "Gamma_DHT[10nM]", "Epsilon_EtOH", "Epsilon_DHT[10nM]",
+                "Ductal_EtOH", "Ductal_DHT[10nM]", "Acinar_EtOH", "Acinar_DHT[10nM]", 
+                "Quiescent Stellate_EtOH", "Quiescent Stellate_DHT[10nM]", "Activated Stellate_EtOH", "Activated Stellate_DHT[10nM]", "Proliferating Stellate_EtOH", "Proliferating Stellate_DHT[10nM]",
+                "Macrophage_EtOH", "Macrophage_DHT[10nM]", "T-Lymphocyte_EtOH", "T-Lymphocyte_DHT[10nM]", "Mast_EtOH", "Mast_DHT[10nM]", "Schwann_EtOH", "Schwann_DHT[10nM]", "Endothelial_EtOH", "Endothelial_DHT[10nM]")
+head(pancreas.integrated@meta.data$celltype)
+
+# Re-level object@meta.data this just orders the actual metadata slot, so when you pull its already ordered
+pancreas.integrated@meta.data$celltype.sample <- factor(x = pancreas.integrated@meta.data$celltype.sample, levels = my_levels2)
+table(pancreas.integrated@meta.data$celltype.sample)
+
+# Re select organized idents
+Idents(pancreas.integrated) <- "celltype.sample"
+DefaultAssay(object = pancreas.integrated) <- "RNA"
+
+# Selected genes
+markers.to.plot <- c("MT-ND1", "MT-ND2", "MT-ND3", "MT-ND4", "MT-ND5", "MT-ND6",
+                     "MT-CYB", 
+                     "MT-CO1", "MT-CO2", "MT-CO3",
+                     "MT-ATP6")
+
+# Dotplot
+DotPlot(pancreas.integrated,  
+        dot.scale = 8,
+        col.min = -1, #minimum level
+        col.max = 1,  #maximum level
+        features = rev(markers.to.plot)) + 
+  geom_point(aes(size=pct.exp), shape = 21, stroke=0.5) +
+  theme_light() +
+  #facet_wrap(~??? what metadata should be here??)
+  #coord_flip() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust=1, size =12, face = "bold", colour = "black")) +
+  theme(axis.text.y = element_text(angle = 0, vjust = 0.3, hjust=1, size =12, face = "bold", colour = "black")) +
+  theme(plot.title = element_text(size = 10, face = "bold"),
+        legend.title=element_text(size=12, face = "bold"), 
+        legend.text=element_text(size=12, face = "bold")) +
+  scale_colour_gradient2(low =c("dodgerblue"), mid = c("white"), high =c("red3")) +
+  guides(color = guide_colorbar(title = 'Average Expression'))
 
 # Save file this will change but for showing them on 07132021 its fine
-saveRDS(pancreas.integrated, file = r"(C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds)")
+#saveRDS(pancreas.integrated, file = r"(C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds)")
 #pancreas.integrated <- readRDS(r"(C:/Users/mqadir/Box/Lab 2301/RNAseq DHT data/wkdir/pancreas.integrated.rds)")
 
 # Identify conserved cell markers
@@ -438,13 +498,16 @@ DoHeatmap(object = pancreas.integrated,
                                                                             "#fbfcbd", 
                                                                             "#ff0000"))(256))
 # Identify conserved cell markers
-Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("Beta INS-hi", "Beta INS-low", "Alpha GCG-hi", "Alpha GCG-low", "Transdifferentiating Beta", "Delta", "Gamma", "Epsilon",
+Idents(pancreas.integrated) <- factor(Idents(pancreas.integrated), levels = c("Beta INS-hi", "Beta INS-low", "Transdifferentiating Beta", "Alpha GCG-hi", "Alpha GCG-low", "Delta", "Gamma", "Epsilon",
                                                                               "Ductal", "Acinar", 
                                                                               "Quiescent Stellate", "Activated Stellate", "Proliferating Stellate", 
                                                                               "Macrophage", "T-Lymphocyte", "Mast", "Schwann", "Endothelial"))
 markers.to.plot <- c("INS", "IAPP", "NKX6-1", "MAFA", "MAFB", "GCG", "DPP4", "GC", "LEPR", "SST", "FRZB", "PPY", "CALB1", "THSD7A", "GHRL", "PHGR1",
                      "CFTR", "KRT19", "MMP7", "CELA2A", "CELA2B", "CELA3A", "RGS5", "CSRP2", "FABP4", "COL3A1", "FMOD", "PDGFRB", "MKI67", "HIST1H4C", "STMN1", 
-                     "CD86", "CSF1R", "SDS", "NKG7", "IL2RB", "CCL5", "RGS13", "TPSB2", "TPSAB1", "SOX10", "CDH19", "NGFR", "CD34", "ENG", "VWF")
+                     "CD86", "CSF1R", "SDS", "NKG7", "IL2RB", "CCL5", "RGS13", "TPSB2", "TPSAB1", "SOX10", "CDH19", "NGFR", "CD34", "ENG", "VWF", "UCN3")
+markers.to.plot <- c("INS", "IAPP", "PDX1", "MAFA", "MAFB", "GCG", "DPP4", "GC", "LEPR", "SST", "PPY", "THSD7A", "GHRL", "FRZB",
+                     "CFTR", "MMP7", "CELA2A", "CELA3A", "RGS5", "FABP4", "COL3A1", "FMOD", "MKI67", "STMN1", 
+                     "CSF1R", "SDS", "NKG7", "CCL5", "TPSB2", "TPSAB1", "SOX10", "NGFR", "ENG", "VWF")
 
 # Advanced coding for ggplot2
 # Create a new metadata slot containing combined info, segregating clusters and samples
@@ -465,9 +528,13 @@ table(pancreas.integrated@meta.data$celltype.sample)
 
 # Re select organized idents
 Idents(pancreas.integrated) <- "celltype.sample"
+Idents(pancreas.integrated) <- "celltype"
 DefaultAssay(object = pancreas.integrated) <- "RNA"
 DotPlot(pancreas.integrated,  
-        dot.scale = 8, 
+        dot.scale = 8,
+        scale = TRUE,
+        col.min = -2, #minimum level
+        col.max = 3,  #maximum level
         features = rev(markers.to.plot)) + 
   geom_point(aes(size=pct.exp), shape = 21, stroke=0.5) +
   theme_light() +
@@ -478,7 +545,7 @@ DotPlot(pancreas.integrated,
   theme(plot.title = element_text(size = 10, face = "bold"),
         legend.title=element_text(size=12, face = "bold"), 
         legend.text=element_text(size=12, face = "bold")) +
-  scale_colour_gradient(low =c("white"), high =c("red")) +
+  scale_colour_gradient2(low =c("dodgerblue"), mid =c("white"), high =c("red")) +
   guides(color = guide_colorbar(title = 'Average Expression'))
 
 # Older dotplot configuration, shows only percentage not expression
@@ -911,7 +978,8 @@ endothelial.DHT.response <- FindMarkers(pancreas.integrated,
 head(endothelial.DHT.response, n = 15)
 write.csv(endothelial.DHT.response, file = r"(C:\Users\mqadir\Box\Lab 2301\RNAseq DHT data\Data output\1endothelial.DHT.response.csv)")
 
-# Plotting DE genes
+
+# Plotting DE genes ###
 Idents(pancreas.integrated) <- "celltype"
 beta.cells <- subset(pancreas.integrated, idents = "Beta INS-hi")
 plots <- VlnPlot(beta.cells, features = c("INS", "DDIT3", "MIF", "DEPP1", "PLCG2", "IAPP"), group.by = "treatment", 
@@ -921,7 +989,7 @@ plots <- VlnPlot(beta.cells, features = c("MT-CO3", "MT-ND1", "MT-ND4", "MT-ATP6
 wrap_plots(plots = plots, nrow = 1, ncol = 1)
 
 # Load data
-volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\All Genes\epsilon.DHT.response.csv)",
+volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\1. All Genes\1beta.INSLow.DHT.response.csv)",
                                     header = TRUE, sep = ",", row.names = 1)
 volcanodat <- epsilon.DHT.response
 
@@ -951,10 +1019,10 @@ EnhancedVolcano(volcanodat,
                 y = 'p_val',
                 #selectLab = FALSE,
                 #selectLab = rownames(volcanodat)[which(names(keyvals) %in% c('high', 'low'))],
-                selectLab = c(''),
+                selectLab = c(''), # use this for labelling genes on plot
                 #boxedLabels = TRUE,
-                xlim = c(-2,2),
-                ylim = c(0,4),
+                xlim = c(-1,1.2),
+                ylim = c(0,35),
                 xlab = bquote(~Log[2]~ 'fold change'),
                 title = 'Custom colour over-ride',
                 pCutoff = 0.05,
@@ -967,7 +1035,7 @@ EnhancedVolcano(volcanodat,
                 labCol = 'black',
                 shape = c(20, 20, 20, 20),
                 colCustom = keyvals,
-                colAlpha = 4/5,
+                colAlpha = 1,
                 legendPosition = 'right',
                 legendLabSize = 15,
                 legendIconSize = 5.0,
