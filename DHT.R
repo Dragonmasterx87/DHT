@@ -989,9 +989,9 @@ plots <- VlnPlot(beta.cells, features = c("MT-CO3", "MT-ND1", "MT-ND4", "MT-ATP6
 wrap_plots(plots = plots, nrow = 1, ncol = 1)
 
 # Load data
-volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\1. All Genes\1beta.INSLow.DHT.response.csv)",
+volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\1. All Genes\1alpha.GCGHi.DHT.response.csv)",
                                     header = TRUE, sep = ",", row.names = 1)
-volcanodat <- epsilon.DHT.response
+#volcanodat <- epsilon.DHT.response
 
 # create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change
 # set the base colour as 'black'
@@ -1012,35 +1012,41 @@ unique(names(keyvals))
 
 unique(keyvals)
 keyvals[1:20]
-
+options(ggrepel.max.overlaps = Inf)
 EnhancedVolcano(volcanodat,
                 lab = rownames(volcanodat),
                 x = 'avg_log2FC',
                 y = 'p_val',
                 #selectLab = FALSE,
                 #selectLab = rownames(volcanodat)[which(names(keyvals) %in% c('high', 'low'))],
-                selectLab = c(''), # use this for labelling genes on plot
+                selectLab = c('ATP5F1E', 'ATP1B1', 'COX17', 'MT-ND4L',
+                              'ATP5MC1', 'ATP5MD', 'COX7A1', 'ATP5ME', 'UQCR10',
+                              'COX7A2', 'NDUFC1', 'LDHA', 'COX8A', 'COX7B', 'COX6C', 'NDUFC2', 
+                              'NDUFAB1', 'UQCRQ',
+                              'MT-CO3', 'MT-ND1','MT-ND4', 'MT-Co1', 'MT-ATP6', 'MT-CYB', 'MT-ND2',
+                              'MT-CO2', 'MT-ND5', 'MT-ND3', 'PCSK', 'SOD2', 'MT-ND6', 'ATP9A'), # use this for labelling genes on plot
                 #boxedLabels = TRUE,
-                xlim = c(-1,1.2),
-                ylim = c(0,35),
+                xlim = c(-1,0.8),
+                ylim = c(0,300),
                 xlab = bquote(~Log[2]~ 'fold change'),
                 title = 'Custom colour over-ride',
                 pCutoff = 0.05,
                 FCcutoff = 0.137504,
                 #pointSize = c(ifelse(volcanodat$avg_log2FC < -1 | volcanodat$avg_log2FC > 1, 6, 4)),
-                pointSize = 5,
-                labSize = 6,
+                pointSize = 3,
+                labSize = 5,
                 labFace = 'bold',
                 #boxedLabels = TRUE,
                 labCol = 'black',
                 shape = c(20, 20, 20, 20),
                 colCustom = keyvals,
-                colAlpha = 1,
+                colAlpha = 2,
                 legendPosition = 'right',
                 legendLabSize = 15,
                 legendIconSize = 5.0,
                 drawConnectors = TRUE,
                 widthConnectors = 1,
+                typeConnectors = 'closed', 
                 colConnectors = 'black',
                 gridlines.major = FALSE,
                 gridlines.minor = FALSE,
@@ -1052,6 +1058,203 @@ EnhancedVolcano(volcanodat,
                                                 axis.title.y = element_text(colour = "black"))
 
 
+# Load data
+volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\1. All Genes\1alpha.GCGLow.DHT.response.csv)",
+                       header = TRUE, sep = ",", row.names = 1)
+#volcanodat <- epsilon.DHT.response
+
+# create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change
+# set the base colour as 'black'
+keyvals <- rep('black', nrow(volcanodat))
+
+# set the base name/label as 'Mid'
+names(keyvals) <- rep('Mid', nrow(volcanodat))
+
+# modify keyvals for variables with fold change > 1.1
+keyvals[which(volcanodat$avg_log2FC > 0.137504 & volcanodat$p_val < 0.05)] <- 'red'
+names(keyvals)[which(volcanodat$avg_log2FC > 0.137504 & volcanodat$p_val < 0.05)] <- 'high'
+
+# modify keyvals for variables with fold change < -1.1
+keyvals[which(volcanodat$avg_log2FC < -0.137504 & volcanodat$p_val < 0.05)] <- 'royalblue'
+names(keyvals)[which(volcanodat$avg_log2FC < -0.137504 & volcanodat$p_val < 0.05)] <- 'low'
+
+unique(names(keyvals))
+
+unique(keyvals)
+keyvals[1:20]
+options(ggrepel.max.overlaps = Inf)
+EnhancedVolcano(volcanodat,
+                lab = rownames(volcanodat),
+                x = 'avg_log2FC',
+                y = 'p_val',
+                #selectLab = FALSE,
+                #selectLab = rownames(volcanodat)[which(names(keyvals) %in% c('high', 'low'))],
+                selectLab = c('PCSK1N', 'COX4I1', 'ATP5F1B', 'MT-CO3',
+                              'MT-ND4L', 'MT-ATP8', 'MT-ND5', 'COX20', 'MT-ND6',
+                              'ABCC8', 'ATP1B1', 'ATP5MC1'), # use this for labelling genes on plot
+                #boxedLabels = TRUE,
+                xlim = c(-1,1.6),
+                ylim = c(0,8),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                title = 'Custom colour over-ride',
+                pCutoff = 0.05,
+                FCcutoff = 0.137504,
+                #pointSize = c(ifelse(volcanodat$avg_log2FC < -1 | volcanodat$avg_log2FC > 1, 6, 4)),
+                pointSize = 3,
+                labSize = 5,
+                labFace = 'bold',
+                #boxedLabels = TRUE,
+                labCol = 'black',
+                shape = c(20, 20, 20, 20),
+                colCustom = keyvals,
+                colAlpha = 2,
+                legendPosition = 'right',
+                legendLabSize = 15,
+                legendIconSize = 5.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1,
+                typeConnectors = 'closed', 
+                colConnectors = 'black',
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                border = 'partial',
+                borderWidth = 1.5,
+                borderColour = 'black') + theme(axis.text.x = element_text(colour = "black"),
+                                                axis.text.y = element_text(colour = "black"),
+                                                axis.title.x = element_text(colour = "black"),
+                                                axis.title.y = element_text(colour = "black"))
+
+# Load data
+volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\1. All Genes\1beta.INSHi.DHT.response.csv)",
+                       header = TRUE, sep = ",", row.names = 1)
+#volcanodat <- epsilon.DHT.response
+
+# create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change
+# set the base colour as 'black'
+keyvals <- rep('black', nrow(volcanodat))
+
+# set the base name/label as 'Mid'
+names(keyvals) <- rep('Mid', nrow(volcanodat))
+
+# modify keyvals for variables with fold change > 1.1
+keyvals[which(volcanodat$avg_log2FC > 0.137504 & volcanodat$p_val < 0.05)] <- 'red'
+names(keyvals)[which(volcanodat$avg_log2FC > 0.137504 & volcanodat$p_val < 0.05)] <- 'high'
+
+# modify keyvals for variables with fold change < -1.1
+keyvals[which(volcanodat$avg_log2FC < -0.137504 & volcanodat$p_val < 0.05)] <- 'royalblue'
+names(keyvals)[which(volcanodat$avg_log2FC < -0.137504 & volcanodat$p_val < 0.05)] <- 'low'
+
+unique(names(keyvals))
+
+unique(keyvals)
+keyvals[1:20]
+options(ggrepel.max.overlaps = Inf)
+EnhancedVolcano(volcanodat,
+                lab = rownames(volcanodat),
+                x = 'avg_log2FC',
+                y = 'p_val',
+                #selectLab = FALSE,
+                #selectLab = rownames(volcanodat)[which(names(keyvals) %in% c('high', 'low'))],
+                selectLab = c('TPI1', 'IAPP', 'PGK1', 'NPY', 'CTNNB1', 'VEGFA', 'PKM',
+                              'MT-CO3', 'MT-ND1', 'MT-ND4', 'MT-CO1', 'MT-ATP6', 'MT-CYB', 'MT-ND2', 'MT-CO2', 'MT-ND3', 'MT-ND6', 'ABCC8',
+                              'MAFA', 'PDX1', 'PCSK1', 'MAFB', 'ACTB', 'GSN'), # use this for labelling genes on plot
+                #boxedLabels = TRUE,
+                xlim = c(-1.5,1.5),
+                ylim = c(0,300),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                title = 'Custom colour over-ride',
+                pCutoff = 0.05,
+                FCcutoff = 0.137504,
+                #pointSize = c(ifelse(volcanodat$avg_log2FC < -1 | volcanodat$avg_log2FC > 1, 6, 4)),
+                pointSize = 3,
+                labSize = 5,
+                labFace = 'bold',
+                #boxedLabels = TRUE,
+                labCol = 'black',
+                shape = c(20, 20, 20, 20),
+                colCustom = keyvals,
+                colAlpha = 2,
+                legendPosition = 'right',
+                legendLabSize = 15,
+                legendIconSize = 5.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1,
+                typeConnectors = 'closed', 
+                colConnectors = 'black',
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                border = 'partial',
+                borderWidth = 1.5,
+                borderColour = 'black') + theme(axis.text.x = element_text(colour = "black"),
+                                                axis.text.y = element_text(colour = "black"),
+                                                axis.title.x = element_text(colour = "black"),
+                                                axis.title.y = element_text(colour = "black"))
+
+# Load data
+volcanodat <- read.csv(r"(C:\Users\mqadir\Box\!FAHD\1. AR-DHT Project\DHT_scRNAseq_Islets\1. DGE_analysis\1. All Genes\1beta.INSLow.DHT.response.csv)",
+                       header = TRUE, sep = ",", row.names = 1)
+#volcanodat <- epsilon.DHT.response
+
+# create custom key-value pairs for 'high', 'low', 'mid' expression by fold-change
+# set the base colour as 'black'
+keyvals <- rep('black', nrow(volcanodat))
+
+# set the base name/label as 'Mid'
+names(keyvals) <- rep('Mid', nrow(volcanodat))
+
+# modify keyvals for variables with fold change > 1.1
+keyvals[which(volcanodat$avg_log2FC > 0.137504 & volcanodat$p_val < 0.05)] <- 'red'
+names(keyvals)[which(volcanodat$avg_log2FC > 0.137504 & volcanodat$p_val < 0.05)] <- 'high'
+
+# modify keyvals for variables with fold change < -1.1
+keyvals[which(volcanodat$avg_log2FC < -0.137504 & volcanodat$p_val < 0.05)] <- 'royalblue'
+names(keyvals)[which(volcanodat$avg_log2FC < -0.137504 & volcanodat$p_val < 0.05)] <- 'low'
+
+unique(names(keyvals))
+
+unique(keyvals)
+keyvals[1:20]
+options(ggrepel.max.overlaps = Inf)
+EnhancedVolcano(volcanodat,
+                lab = rownames(volcanodat),
+                x = 'avg_log2FC',
+                y = 'p_val',
+                #selectLab = FALSE,
+                #selectLab = rownames(volcanodat)[which(names(keyvals) %in% c('high', 'low'))],
+                selectLab = c('ABCC8', 'NKX6-1', 'VEGFA', 'INS', 'PGK1', 'KIF1A', 'NKX2-2', 'IAPP', 'PDK', 'KCNK1',
+                              'GCN', 'MYO6', 'GCGR', 'ENO2', 'MT-CO3', 'MT-ND1', 'MT-ATP6', 'MT-ND4', 'SOD2', 'MT-CYB', 'MT-CO1',
+                              'COX4I1', 'NDUFB6', 'UQCRB', 'ATP5F1E', 'ATP6V0E2', 'NDUFS8'), # use this for labelling genes on plot
+                #boxedLabels = TRUE,
+                xlim = c(-1,1.6),
+                ylim = c(0,40),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                title = 'Custom colour over-ride',
+                pCutoff = 0.05,
+                FCcutoff = 0.137504,
+                #pointSize = c(ifelse(volcanodat$avg_log2FC < -1 | volcanodat$avg_log2FC > 1, 6, 4)),
+                pointSize = 3,
+                labSize = 5,
+                labFace = 'bold',
+                #boxedLabels = TRUE,
+                labCol = 'black',
+                shape = c(20, 20, 20, 20),
+                colCustom = keyvals,
+                colAlpha = 2,
+                legendPosition = 'right',
+                legendLabSize = 15,
+                legendIconSize = 5.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1,
+                typeConnectors = 'closed', 
+                colConnectors = 'black',
+                gridlines.major = FALSE,
+                gridlines.minor = FALSE,
+                border = 'partial',
+                borderWidth = 1.5,
+                borderColour = 'black') + theme(axis.text.x = element_text(colour = "black"),
+                                                axis.text.y = element_text(colour = "black"),
+                                                axis.title.x = element_text(colour = "black"),
+                                                axis.title.y = element_text(colour = "black"))
 # Calculating percentages
 X1 <- NULL
 table(x = FetchData(pancreas.integrated, vars = c('celltype', 'sex')))
